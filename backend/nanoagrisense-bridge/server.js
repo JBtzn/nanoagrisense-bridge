@@ -21,35 +21,6 @@ app.use(cors());
 app.use(express.json());
 
 // ==========================================
-// Firebase Admin SDK Security Initialization
-// ==========================================
-let serviceAccount;
-
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  // Production Environment: Parse the credentials from Railway's environment variable
-  try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    console.log("🔒 Firebase Admin initialized successfully using production environment variables.");
-  } catch (err) {
-    console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT environment variable:", err.message);
-    process.exit(1);
-  }
-} else {
-  // Local Development: Fall back to your local downloaded key file
-  try {
-    serviceAccount = require('./serviceAccountKey.json');
-    console.log("⚙️ Firebase Admin initialized successfully using local serviceAccountKey.json.");
-  } catch (err) {
-    console.error("❌ Error: Missing serviceAccountKey.json for local testing. See Step 4.");
-    process.exit(1);
-  }
-}
-
-initializeApp({
-  credential: cert(serviceAccount)
-});
-
-// ==========================================
 // REST API Bridge Endpoint: POST /api/telemetry
 // ==========================================
 app.post('/api/telemetry', async (req, res) => {
