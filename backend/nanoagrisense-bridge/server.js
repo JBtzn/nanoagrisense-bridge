@@ -1,22 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
+
 const serviceAccount = require('./serviceAccountKey.json');
 
-if (!admin || !admin.apps || admin.apps.length === 0) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
+if (admin.apps.length === 0) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
 }
 
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
+
 const app = express();
-app.use(express.json());
-app.use(cors()); // I-enable kung kinakailangan ng React dashboard ninyo
 
-
-// Enable Cross-Origin Resource Sharing (CORS) and JSON payload parsing
+// Middleware
 app.use(cors());
 app.use(express.json());
 
