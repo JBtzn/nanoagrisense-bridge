@@ -39,8 +39,6 @@ initializeApp({
   credential: cert(serviceAccount)
 });
 
-const db = getFirestore();
-
 // ==========================================
 // REST API Bridge Endpoint: POST /api/telemetry
 // ==========================================
