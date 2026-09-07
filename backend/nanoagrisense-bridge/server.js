@@ -101,10 +101,6 @@ app.post('/api/telemetry', async (req, res) => {
 });
 
 const admin = require('firebase-admin');
-
-// 1. I-load ang inyong secret credentials file (na nasa Render at .gitignore)
-const serviceAccount = require('./serviceAccountKey.json'); 
-
 // 2. I-initialize ang Firebase Admin SDK gamit ang credentials
 if (!admin.apps.length) {
   admin.initializeApp({
