@@ -1,0 +1,141 @@
+{
+  "firebase_nosql_architecture": {
+    "database_type": "Cloud Firestore (Document-Oriented NoSQL)",
+    "description": "A scalable, real-time schema tailored for the NanoAgriSense system. Organized using subcollection structures to isolate high-frequency telemetry under specific physical edge nodes, maximizing query performance and reducing read/write indexing costs.",
+    "collections": {
+      "nodes": {
+        "description": "Main collection storing physical ESP32 Edge Sensor Nodes metadata and their operational state.",
+        "schema_definition": {
+          "node_id": "String (Unique node identifier, e.g., 'NODE-001')",
+          "last_update": "Timestamp (ISO 8601 representation)",
+          "battery_voltage": "Float (Current voltage level in V for power audits)",
+          "signal_strength_rssi": "Integer (Signal strength in dBm for LoRaWAN link audits)",
+          "location": {
+            "latitude": "Float (GPS coordinate)",
+            "longitude": "Float (GPS coordinate)",
+            "plot_description": "String (e.g., 'Tarlac Tomato Test Plot A')"
+          },
+          "calibration_offsets": {
+            "ph_offset": "Float (Calibration offset for industrial probe)",
+            "moisture_offset": "Float (Calibration offset for soil moisture sensor)"
+          }
+        },
+        "mock_document_example": {
+          "node_id": "NODE-001",
+          "last_update": "2026-08-23T15:00:00Z",
+          "battery_voltage": 3.85,
+          "signal_strength_rssi": -78,
+          "location": {
+            "latitude": 15.4822,
+            "longitude": 120.5961,
+            "plot_description": "Tarlac Tomato Test Plot A"
+          },
+          "calibration_offsets": {
+            "ph_offset": -0.15,
+            "moisture_offset": 1.2
+          }
+        },
+        "subcollections": {
+          "telemetry": {
+            "description": "High-frequency subcollection nested under individual node documents. This isolates high-volume time-series telemetry per node, preventing a single flat collection bottleneck.",
+            "schema_definition": {
+              "timestamp": "Timestamp (ISO 8601 format, sorted descending for real-time graphs)",
+              "soil_moisture": "Float (Volumetric Water Content %)",
+              "soil_temperature": "Float (Soil Temperature in \u00b0C)",
+              "soil_ph": "Float (Power of Hydrogen level, 0 to 14 scale)",
+              "carbon_dioxide": "Float (Dissolved/Surface CO2 level in ppm)",
+              "nutrients_npk": {
+                "nitrogen_n": "Float (Nitrogen level in mg/kg)",
+                "phosphorus_p": "Float (Phosphorus level in mg/kg)",
+                "potassium_k": "Float (Potassium level in mg/kg)"
+              }
+            },
+            "mock_document_example": {
+              "timestamp": "2026-08-23T15:55:00Z",
+              "soil_moisture": 38.4,
+              "soil_temperature": 28.6,
+              "soil_ph": 5.85,
+              "carbon_dioxide": 412.5,
+              "nutrients_npk": {
+                "nitrogen_n": 45.2,
+                "phosphorus_p": 12.8,
+                "potassium_k": 34.1
+              }
+            }
+          }
+        }
+      },
+      "actuators": {
+        "description": "Main collection storing hardware states and active configurations for solenoid valves, pumps, and mixing chamber agitators.",
+        "schema_definition": {
+          "actuator_id": "String (Unique identifier, e.g., 'ACT-001')",
+          "type": "String (e.g., 'Pump System', 'Mixing Chamber Agitator')",
+          "location_hub": "String (e.g., 'Chamber Hub A')",
+          "target_node": "String (Foreign key mapping to node_id)",
+          "current_state": "String ('ON' or 'OFF')",
+          "control_override_active": "Boolean (True if user triggered manual panel UI switch)",
+          "fuzzy_outputs": {
+            "sugeno_calculated_speed": "Float (Calculated PWM duty cycle percentage 0-100%)",
+            "solenoid_valve_selected": "String ('RESERVOIR_A_WATER' or 'RESERVOIR_B_NPK_SILICA')"
+          }
+        },
+        "mock_document_example": {
+          "actuator_id": "ACT-001",
+          "type": "Pump System",
+          "location_hub": "Chamber Hub A",
+          "target_node": "NODE-001",
+          "current_state": "ON",
+          "control_override_active": false,
+          "fuzzy_outputs": {
+            "sugeno_calculated_speed": 75.0,
+            "solenoid_valve_selected": "RESERVOIR_B_NPK_SILICA"
+          }
+        },
+        "subcollections": {
+          "actuation_logs": {
+            "description": "Auditable log history capturing every physical switching action triggered by either manual user overrides or the Sugeno fuzzy expert loops.",
+            "schema_definition": {
+              "log_id": "String (Unique transactional UUID)",
+              "timestamp": "Timestamp (ISO 8601)",
+              "duration_seconds": "Integer (How long the pump/agitator ran)",
+              "triggered_by": "String ('Fuzzy Controller' or 'Manual Override')",
+              "execution_parameters": {
+                "pump_pwm_duty_cycle": "Integer (0-255 map)",
+                "dosed_volume_liters": "Float (Volume calculated via calibration offsets)"
+              }
+            },
+            "mock_document_example": {
+              "log_id": "LOG_984729104",
+              "timestamp": "2026-08-23T15:55:02Z",
+              "duration_seconds": 120,
+              "triggered_by": "Fuzzy Controller",
+              "execution_parameters": {
+                "pump_pwm_duty_cycle": 191,
+                "dosed_volume_liters": 2.5
+              }
+            }
+          }
+        }
+      },
+      "system_alerts": {
+        "description": "Transactional collection tracking active threshold warnings, network dropouts, and hardware failures to push real-time alerts to the web dashboard.",
+        "schema_definition": {
+          "alert_id": "String (Unique alert instance ID)",
+          "timestamp": "Timestamp (ISO 8601)",
+          "source_id": "String (node_id or actuator_id trigger)",
+          "severity_tier": "String ('WARNING', 'CRITICAL', 'FAULT')",
+          "alert_message": "String (Descriptive telemetry notification)",
+          "is_resolved": "Boolean (User dashboard checkmark flag)"
+        },
+        "mock_document_example": {
+          "alert_id": "ALT_382910",
+          "timestamp": "2026-08-23T15:56:10Z",
+          "source_id": "NODE-001",
+          "severity_tier": "CRITICAL",
+          "alert_message": "Critical: Soil moisture has dropped below Sugeno lower limit (38.4% < 40.0%) on Test Plot A",
+          "is_resolved": false
+        }
+      }
+    }
+  }
+}

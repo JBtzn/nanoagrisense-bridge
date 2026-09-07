@@ -1,0 +1,11 @@
+# Node dependencies
+node_modules/
+dist/
+build/
+.env
+
+# Secure private database keys in any subfolder
+**/serviceAccountKey.json
+
+# Local system files
+.DS_Store
