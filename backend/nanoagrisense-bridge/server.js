@@ -111,9 +111,6 @@ if (!admin.apps.length) {
 // 3. Ngayong initialized na ang admin, ligtas na nating magagawa ang 'db'
 const db = admin.firestore();
 
-// 4. I-load ang FieldValue (isang beses lamang!) kung gagamit kayo ng timestamps
-const FieldValue = admin.firestore.FieldValue;
-
 // =======================================================
 // COMMANDS API: POST /api/actuators/override
 // Triggers a manual override of water/nutrient pumps or agitators
