@@ -1,23 +1,53 @@
 const express = require('express');
 const cors = require('cors');
-const admin = require('firebase-admin');
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 
 const serviceAccount = require('./serviceAccountKey.json');
 
-if (admin.apps.length === 0) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+if (getApps().length === 0) {
+    initializeApp({
+        credential: cert(serviceAccount)
     });
 }
 
-const db = admin.firestore();
-const FieldValue = admin.firestore.FieldValue;
+const db = getFirestore();
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// ==========================================
+// Auth Middleware: verifies Firebase ID token
+// Client must send: Authorization: Bearer <idToken>
+// ==========================================
+async function authenticateUser(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const [scheme, token] = authHeader.split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      return res.status(401).json({
+        success: false,
+        message: "Missing or malformed Authorization header. Expected 'Bearer <idToken>'."
+      });
+    }
+
+    const decodedToken = await getAuth().verifyIdToken(token);
+    req.user = decodedToken; // e.g. req.user.email, req.user.phone_number, req.user.uid
+
+    return next();
+  } catch (error) {
+    console.error("❌ Auth Middleware Error:", error.message);
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired authentication token."
+    });
+  }
+}
 
 // ==========================================
 // REST API Bridge Endpoint: POST /api/telemetry
@@ -220,102 +250,4 @@ app.get('/api/actuators/commands', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🛰️ Express Bridge Server listening on port ${PORT}`);
-});
-
-// =======================================================
-// COMMANDS API: POST /api/actuators/override
-// Triggers a manual override of water/nutrient pumps or agitators
-// =======================================================
-app.post('/api/actuators/override', async (req, res) => {
-  try {
-    const { actuator_id, state, duration_seconds, pwm_duty_cycle } = req.body;
-
-    // 1. Core Validations
-    if (!actuator_id) {
-      return res.status(400).json({ success: false, message: "Missing 'actuator_id'." });
-    }
-    if (state !== 'ON' && state !== 'OFF') {
-      return res.status(400).json({ success: false, message: "State must be 'ON' or 'OFF'." });
-    }
-
-    // 2. Reference the Actuator Document in Firestore
-    const actuatorRef = db.collection('actuators').doc(actuator_id);
-    const doc = await actuatorRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: "Actuator not found." });
-    }
-
-    // 3. Update the Actuator Document State
-    // Set control_override_active to true to suppress the Sugeno Fuzzy controller loops
-    await actuatorRef.update({
-      current_state: state,
-      control_override_active: true,
-      "fuzzy_outputs.sugeno_calculated_speed": state === 'ON' ? (pwm_duty_cycle || 100.0) : 0.0
-    });
-
-    // 4. Transactional Logging: Append to 'actuation_logs' subcollection
-    const logData = {
-      log_id: `LOG_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      timestamp: FieldValue.serverTimestamp(),
-      duration_seconds: duration_seconds ? parseInt(duration_seconds) : 0,
-      triggered_by: 'Manual Override',
-      execution_parameters: {
-        pump_pwm_duty_cycle: state === 'ON' ? (pwm_duty_cycle || 255) : 0,
-        dosed_volume_liters: state === 'ON' ? (duration_seconds ? (duration_seconds * 0.05) : 0.0) : 0.0 // Mock dose calc
-      }
-    };
-
-    await actuatorRef.collection('actuation_logs').add(logData);
-
-    console.log(`🔧 Manual Override executed for ${actuator_id} -> ${state}`);
-
-    return res.status(200).json({
-      success: true,
-      message: `Manual override set to ${state} for ${actuator_id}. Transaction logged.`,
-      log_details: logData
-    });
-
-  } catch (error) {
-    console.error("❌ Commands API Override Error:", error);
-    return res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-
-// =======================================================
-// COMMANDS API: POST /api/actuators/release
-// Releases manual override to return control to Sugeno Fuzzy Logic Auto Loops
-// =======================================================
-app.post('/api/actuators/release', async (req, res) => {
-  try {
-    const { actuator_id } = req.body;
-
-    if (!actuator_id) {
-      return res.status(400).json({ success: false, message: "Missing 'actuator_id'." });
-    }
-
-    const actuatorRef = db.collection('actuators').doc(actuator_id);
-    const doc = await actuatorRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: "Actuator not found." });
-    }
-
-    // Turn control_override_active off
-    await actuatorRef.update({
-      control_override_active: false
-    });
-
-    console.log(`🍃 Override released for ${actuator_id}. Sugeno Fuzzy Auto-Control resumed.`);
-
-    return res.status(200).json({
-      success: true,
-      message: `Override released. Actuator ${actuator_id} is now under Sugeno Auto-Control.`
-    });
-
-  } catch (error) {
-    console.error("❌ Commands API Release Error:", error);
-    return res.status(500).json({ success: false, error: error.message });
-  }
 });
