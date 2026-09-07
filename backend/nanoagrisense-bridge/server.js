@@ -101,7 +101,22 @@ app.post('/api/telemetry', async (req, res) => {
 });
 
 const admin = require('firebase-admin');
+
+// 1. I-load ang inyong secret credentials file (na nasa Render at .gitignore)
+const serviceAccount = require('./serviceAccountKey.json'); 
+
+// 2. I-initialize ang Firebase Admin SDK gamit ang credentials
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
+
+// 3. Ngayong initialized na ang admin, ligtas na nating magagawa ang 'db'
 const db = admin.firestore();
+
+// 4. I-load ang FieldValue (isang beses lamang!) kung gagamit kayo ng timestamps
+const FieldValue = admin.firestore.FieldValue;
 
 // =======================================================
 // COMMANDS API: POST /api/actuators/override
