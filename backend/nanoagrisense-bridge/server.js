@@ -1,10 +1,20 @@
 const express = require('express');
 const cors = require('cors');
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
-require('dotenv').config();
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json');
 
+if (!admin || !admin.apps || admin.apps.length === 0) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
+
+const db = admin.firestore();
+const FieldValue = admin.firestore.FieldValue;
 const app = express();
+app.use(express.json());
+app.use(cors()); // I-enable kung kinakailangan ng React dashboard ninyo
+
 
 // Enable Cross-Origin Resource Sharing (CORS) and JSON payload parsing
 app.use(cors());
@@ -99,17 +109,6 @@ app.post('/api/telemetry', async (req, res) => {
     });
   }
 });
-
-const admin = require('firebase-admin');
-// 2. I-initialize ang Firebase Admin SDK gamit ang credentials
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-}
-
-// 3. Ngayong initialized na ang admin, ligtas na nating magagawa ang 'db'
-const db = admin.firestore();
 
 // =======================================================
 // COMMANDS API: POST /api/actuators/override
