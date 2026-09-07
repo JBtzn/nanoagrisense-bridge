@@ -102,7 +102,6 @@ app.post('/api/telemetry', async (req, res) => {
 
 const admin = require('firebase-admin');
 const db = admin.firestore();
-const FieldValue = admin.firestore.FieldValue;
 
 // =======================================================
 // COMMANDS API: POST /api/actuators/override
