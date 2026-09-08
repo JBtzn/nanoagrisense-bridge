@@ -365,38 +365,6 @@ if(navIrrigation){
   });
 }
 
-// Live weather for Tarlac City, PH (Open-Meteo — no API key required)
-const WEATHER_CODES = {
-  0: 'Clear sky', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
-  45: 'Foggy', 48: 'Foggy',
-  51: 'Light drizzle', 53: 'Drizzle', 55: 'Dense drizzle',
-  61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
-  66: 'Freezing rain', 67: 'Freezing rain',
-  80: 'Rain showers', 81: 'Rain showers', 82: 'Violent showers',
-  95: 'Thunderstorm', 96: 'Thunderstorm (hail)', 99: 'Thunderstorm (hail)'
-};
-
-async function updateFieldWeather(){
-  const conditionEl = document.getElementById('weatherCondition');
-  const tempEl = document.getElementById('weatherTemp');
-  try{
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=15.4802&longitude=120.5979&current=temperature_2m,weathercode&timezone=Asia%2FManila');
-    if(!res.ok) throw new Error('Weather request failed');
-    const data = await res.json();
-    const temp = data.current.temperature_2m;
-    const code = data.current.weathercode;
-    conditionEl.textContent = WEATHER_CODES[code] || 'Cloudy';
-    tempEl.textContent = `${temp.toFixed(1)}°C`;
-  } catch(err){
-    conditionEl.textContent = 'Weather unavailable';
-    tempEl.textContent = '';
-    console.error('Field weather fetch failed:', err);
-  }
-}
-
-updateFieldWeather();
-setInterval(updateFieldWeather, 10 * 60 * 1000); // refresh every 10 minutes
-
 // Real-time greeting based on the current hour
 function updateGreeting(){
   const greetingEl = document.getElementById('greetingTitle');
@@ -600,14 +568,6 @@ function refreshKpiCards(){
   updateSensorReadings(buildNodeReading(feedNodes.carbon, npk1), '');
   updateSensorReadings(buildNodeReading(feedNodes.nano, npk2), 'Node2');
 }
-
-// Live field-audit clock for the weather widget (Tarlac local time)
-const clockEl = document.getElementById('fieldClock');
-function tickClock(){
-  clockEl.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-}
-tickClock();
-setInterval(tickClock, 1000);
 
 /* =========================================================
    LIVE SENSOR FEED — Node table

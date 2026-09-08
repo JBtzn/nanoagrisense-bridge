@@ -50,9 +50,8 @@ h1,h2,h3, .brand, .greeting-title{
 header{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  margin: auto;
   max-width: 1280px;
+  margin: 0 auto;
   padding: 28px clamp(20px, 5vw, 64px) 8px;
   gap: 20px;
   flex-wrap: wrap;
@@ -65,6 +64,7 @@ header{
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--ink);
+  margin-right: auto;
 }
 
 .brand-mark{
@@ -74,7 +74,6 @@ header{
   object-fit: cover;
   flex-shrink: 0;
 }
-
 
 /* ---------- NOTIFICATION BELL + PANEL ---------- */
 .notif-wrap{
@@ -257,7 +256,6 @@ nav{
   background: var(--cream);
   padding: 6px 8px;
   display:flex;
-  margin-left: auto;
   flex-wrap: wrap;
   gap: 4px;
 }
@@ -930,20 +928,19 @@ tbody tr:nth-child(even){ background: var(--leaf-light); }
 .node-grid{
   display:grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 26px;
-  margin: 16px;
+  gap: 22px;
+  padding: 22px;
 }
 
 @media (max-width: 640px){
-  .node-grid{ grid-template-columns: 1fr; margin: 12px; padding: 18px; }
+  .node-grid{ grid-template-columns: 1fr; padding: 16px; gap: 16px; }
 }
 
 .node-card{
   background: var(--leaf-mist);
-  border-radius: 14px;
   border: 2px solid var(--ink);
-  padding: 18px 20px;
+  border-radius: 14px;
+  padding: 20px 18px;
   display:flex;
   flex-direction: column;
   gap: 12px;
