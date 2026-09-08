@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NanoAgriSense — Soil Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="assets/logo.png" alt="NanoAgriSense logo" class="brand-mark">
+    NanoAgriSense
+  </div>
+
+  <nav>
+    <a href="#" class="active">Home</a>
+    <a href="#">Reports</a>
+    <a href="#" class="nav-expand" id="navIrrigation" data-short="Irrigation" data-full="Irrigation System and Nutrient Control Center">Irrigation</a>
+    <a href="#">Settings</a>
+  </nav>
+
+  <div class="notif-wrap">
+    <button class="bell-btn" id="notifBellBtn" type="button" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      <span class="notif-badge" id="notifBadge">0</span>
+    </button>
+
+    <div class="notif-panel" id="notifPanel" role="menu" aria-hidden="true">
+      <div class="notif-panel-head">
+        <h3>Notifications</h3>
+        <span class="notif-panel-sub">Field sensor activity</span>
+      </div>
+      <div class="notif-scroll" id="notifScroll">
+
+        <section class="notif-tier notif-tier-critical">
+          <h4 class="notif-tier-title">
+            <span class="tier-dot"></span>Critical Alerts
+            <span class="tier-count" id="critCount">0</span>
+          </h4>
+          <div class="notif-list" id="critList"></div>
+        </section>
+
+        <section class="notif-tier notif-tier-warning">
+          <h4 class="notif-tier-title">
+            <span class="tier-dot"></span>System Warnings
+            <span class="tier-count" id="warnCount">0</span>
+          </h4>
+          <div class="notif-list" id="warnList"></div>
+        </section>
+
+        <section class="notif-tier notif-tier-log">
+          <h4 class="notif-tier-title">
+            <span class="tier-dot"></span>Operational Logs
+            <span class="tier-count" id="logCount">0</span>
+          </h4>
+          <div class="notif-list" id="logList"></div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="panel">
+
+    <div class="top-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="left-col">
+
+        <div class="greeting-card">
+          <h1 class="greeting-title" id="greetingTitle">Good afternoon.</h1>
+          <p class="greeting-body">
+            Current condition of your soil is<br>
+            <span class="status-word">Optimal</span>
+          </p>
+        </div>
+
+        <div class="table-wrap" id="liveFeedPanel">
+          <div class="table-head">
+            <h3 class="table-head-title">Live Sensor Feed</h3>
+            <div class="live-indicator"><span class="live-dot"></span>Live</div>
+            <button class="fullscreen-btn" id="feedFullscreenBtn" type="button" aria-label="Toggle fullscreen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="table-scroll">
+            <table id="feedTable">
+              <thead>
+                <tr>
+                  <th>Time</th><th>Date</th><th>Node (Plot)</th>
+                  <th>Sensor Readings (CO₂, pH, Moisture, NPK, Temp)</th>
+                  <th>Battery / Solar Status</th><th>Tx Interval</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="feedTableBody">
+                <tr>
+                  <td>14:32</td><td>Aug 11</td><td>Node 1 (Mushroom)</td>
+                  <td class="mono readings">400 ppm CO2, 6.5 pH, 45% Moisture, 120 ppm NPK, 28°C</td>
+                  <td>85% (Optimal)</td><td>2 min (Real-Time)</td>
+                  <td><span class="status-pill ok">Normal</span></td>
+                </tr>
+                <tr>
+                  <td>14:32</td><td>Aug 11</td><td>Node 2 (Nanofertilizer)</td>
+                  <td class="mono readings">380 ppm CO2, 6.7 pH, 42% Moisture, 312 ppm NPK, 28.5°C</td>
+                  <td>84% (Optimal)</td><td>2 min (Real-Time)</td>
+                  <td><span class="status-pill watch">Watch</span></td>
+                </tr>
+                <tr>
+                  <td>04:15</td><td>Aug 11</td><td>Node 1 (Mushroom)</td>
+                  <td class="mono readings">390 ppm CO2, 6.4 pH, 38% Moisture, 115 ppm NPK, 18.4°C</td>
+                  <td>42% (Discharging)</td><td>15 min (Power Save)</td>
+                  <td><span class="status-pill alert">Action</span></td>
+                </tr>
+                <tr>
+                  <td>04:15</td><td>Aug 11</td><td>Node 2 (Nanofertilizer)</td>
+                  <td class="mono readings">375 ppm CO2, 6.6 pH, 40% Moisture, 290 ppm NPK, 18.6°C</td>
+                  <td>43% (Discharging)</td><td>15 min (Power Save)</td>
+                  <td><span class="status-pill ok">Normal</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT VISUAL -->
+      <div class="visual-panel" id="chartPanel">
+        <div class="visual-head">
+          <h3 id="chartTitle">Moisture trend — 24h</h3>
+          <span id="chartSubtitle">Sensor cluster B-3</span>
+          <button class="fullscreen-btn" id="chartFullscreenBtn" type="button" aria-label="Toggle fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="chart-area" id="chartArea">
+          <button class="chart-nav chart-nav-left" id="navLeft" type="button" aria-label="Previous parameter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+
+          <div class="chart-svg-wrap" id="chartSvgWrap"><!-- chart svg injected by script.js --></div>
+
+          <button class="chart-nav chart-nav-right" id="navRight" type="button" aria-label="Next parameter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+
+        <div class="legend" id="chartLegend"><!-- legend injected by script.js --></div>
+
+        <div class="chart-dots" id="chartDots"><!-- dot indicators injected by script.js --></div>
+      </div>
+
+    </div>
+
+    <!-- METRICS PANEL -->
+    <div class="metrics-panel">
+
+      <div class="kpi-node-block">
+        <p class="kpi-node-label">Node_001 (Mushroom)</p>
+        <div class="kpi-section kpi-section-soil">
+          <h4 class="kpi-section-header">Soil</h4>
+          <div class="kpi-grid">
+
+            <div class="kpi-card kpi-moisture">
+              <p class="kpi-label">Soil moisture</p>
+              <p class="kpi-value" id="kpiSoilMoisture">--<span class="kpi-unit">%</span></p>
+              <span class="status-pill ok" id="kpiSoilMoistureStatus">Optimal</span>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill teal" id="kpiSoilMoistureMemFill"></span></span>
+                <p class="membership-caption teal" id="kpiSoilMoistureMemCaption">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-temp">
+              <p class="kpi-label">Temperature</p>
+              <p class="kpi-value" id="kpiSoilTemp">--<span class="kpi-unit">°C</span></p>
+              <p class="kpi-note" id="kpiSoilTempNote">Ambient +2.1°C</p>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>Optimal</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill crimson" id="kpiSoilTempMemFill"></span></span>
+                <p class="membership-caption crimson" id="kpiSoilTempMemCaption">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-ec">
+              <p class="kpi-label">EC (salinity)</p>
+              <p class="kpi-value" id="kpiEc">--<span class="kpi-unit">mS/cm</span></p>
+              <span class="status-pill ok" id="kpiEcStatus">Normal</span>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>Med</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill violet" id="kpiEcMemFill"></span></span>
+                <p class="membership-caption violet" id="kpiEcMemCaption">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-ph">
+              <p class="kpi-label">pH</p>
+              <p class="kpi-value" id="kpiPh">--</p>
+              <p class="kpi-note">Target range 6.0 – 6.8</p>
+              <div class="membership">
+                <div class="membership-labels"><span>Out</span><span>In-range</span></div>
+                <span class="membership-track"><span class="membership-fill leaf" id="kpiPhMemFill"></span></span>
+                <p class="membership-caption leaf" id="kpiPhMemCaption">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-npk">
+              <p class="kpi-label">NPK</p>
+              <div class="npk-bars">
+                <div class="npk-row">
+                  <span class="npk-key">N</span>
+                  <span class="bar-track"><span class="bar-fill violet" id="kpiNpkNBar" style="width:0%"></span></span>
+                </div>
+                <div class="npk-row">
+                  <span class="npk-key">P</span>
+                  <span class="bar-track"><span class="bar-fill violet" id="kpiNpkPBar" style="width:0%"></span></span>
+                </div>
+                <div class="npk-row">
+                  <span class="npk-key">K</span>
+                  <span class="bar-track"><span class="bar-fill violet" id="kpiNpkKBar" style="width:0%"></span></span>
+                </div>
+              </div>
+              <p class="kpi-note" id="kpiNpkNote">-- / -- / -- mg/kg</p>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>Med</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill violet" id="kpiNpkMemFill"></span></span>
+                <p class="membership-caption violet" id="kpiNpkMemCaption">—</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-node-block">
+        <p class="kpi-node-label">Node_002 (Nanofertilizer)</p>
+        <div class="kpi-section kpi-section-soil">
+          <h4 class="kpi-section-header">Soil</h4>
+          <div class="kpi-grid">
+
+            <div class="kpi-card kpi-moisture">
+              <p class="kpi-label">Soil moisture</p>
+              <p class="kpi-value" id="kpiSoilMoistureNode2">--<span class="kpi-unit">%</span></p>
+              <span class="status-pill ok" id="kpiSoilMoistureStatusNode2">Optimal</span>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill teal" id="kpiSoilMoistureMemFillNode2"></span></span>
+                <p class="membership-caption teal" id="kpiSoilMoistureMemCaptionNode2">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-temp">
+              <p class="kpi-label">Temperature</p>
+              <p class="kpi-value" id="kpiSoilTempNode2">--<span class="kpi-unit">°C</span></p>
+              <p class="kpi-note" id="kpiSoilTempNoteNode2">Ambient +2.1°C</p>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>Optimal</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill crimson" id="kpiSoilTempMemFillNode2"></span></span>
+                <p class="membership-caption crimson" id="kpiSoilTempMemCaptionNode2">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-ec">
+              <p class="kpi-label">EC (salinity)</p>
+              <p class="kpi-value" id="kpiEcNode2">--<span class="kpi-unit">mS/cm</span></p>
+              <span class="status-pill ok" id="kpiEcStatusNode2">Normal</span>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>Med</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill violet" id="kpiEcMemFillNode2"></span></span>
+                <p class="membership-caption violet" id="kpiEcMemCaptionNode2">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-ph">
+              <p class="kpi-label">pH</p>
+              <p class="kpi-value" id="kpiPhNode2">--</p>
+              <p class="kpi-note">Target range 6.0 – 6.8</p>
+              <div class="membership">
+                <div class="membership-labels"><span>Out</span><span>In-range</span></div>
+                <span class="membership-track"><span class="membership-fill leaf" id="kpiPhMemFillNode2"></span></span>
+                <p class="membership-caption leaf" id="kpiPhMemCaptionNode2">—</p>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-npk">
+              <p class="kpi-label">NPK</p>
+              <div class="npk-bars">
+                <div class="npk-row">
+                  <span class="npk-key">N</span>
+                  <span class="bar-track"><span class="bar-fill violet" id="kpiNpkNBarNode2" style="width:0%"></span></span>
+                </div>
+                <div class="npk-row">
+                  <span class="npk-key">P</span>
+                  <span class="bar-track"><span class="bar-fill violet" id="kpiNpkPBarNode2" style="width:0%"></span></span>
+                </div>
+                <div class="npk-row">
+                  <span class="npk-key">K</span>
+                  <span class="bar-track"><span class="bar-fill violet" id="kpiNpkKBarNode2" style="width:0%"></span></span>
+                </div>
+              </div>
+              <p class="kpi-note" id="kpiNpkNoteNode2">-- / -- / -- mg/kg</p>
+              <div class="membership">
+                <div class="membership-labels"><span>Low</span><span>Med</span><span>High</span></div>
+                <span class="membership-track"><span class="membership-fill violet" id="kpiNpkMemFillNode2"></span></span>
+                <p class="membership-caption violet" id="kpiNpkMemCaptionNode2">—</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-section kpi-section-air">
+        <h4 class="kpi-section-header">Air</h4>
+        <div class="kpi-grid kpi-grid-air">
+
+          <div class="kpi-card kpi-co2">
+            <p class="kpi-card-node-label">Node_001 (Mushroom)</p>
+            <p class="kpi-label">CO₂ concentration</p>
+            <p class="kpi-value kpi-value-lg" id="kpiCo2">--<span class="kpi-unit">ppm</span></p>
+            <span class="status-pill ok" id="kpiCo2Status">Normal</span>
+            <p class="kpi-note">Daily average: <strong id="kpiCo2Avg">--</strong> ppm</p>
+            <p class="kpi-note">Safe range: <strong>400 – 1000</strong> ppm</p>
+          </div>
+
+          <div class="kpi-card kpi-co2">
+            <p class="kpi-card-node-label">Node_002 (Nanofertilizer)</p>
+            <p class="kpi-label">CO₂ concentration</p>
+            <p class="kpi-value kpi-value-lg" id="kpiCo2Node2">--<span class="kpi-unit">ppm</span></p>
+            <span class="status-pill ok" id="kpiCo2StatusNode2">Normal</span>
+            <p class="kpi-note">Daily average: <strong id="kpiCo2AvgNode2">--</strong> ppm</p>
+            <p class="kpi-note">Safe range: <strong>400 – 1000</strong> ppm</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSOR NODE OVERVIEW -->
+    <div class="node-panel">
+      <h3 class="node-title">Sensor Node Overview</h3>
+
+      <div class="grid-status">
+        <div class="grid-status-bar">
+          <span>Grid Status</span>
+
+          <div class="node-filter" id="nodeFilter" role="tablist" aria-label="Filter sensor nodes">
+            <span class="node-filter-thumb" id="filterThumb" aria-hidden="true"></span>
+            <button class="node-filter-btn active" data-filter="all" role="tab" aria-selected="true">All nodes</button>
+            <button class="node-filter-btn" data-filter="online" role="tab" aria-selected="false">Online</button>
+            <button class="node-filter-btn" data-filter="offline" role="tab" aria-selected="false">Offline</button>
+          </div>
+        </div>
+        <div class="node-grid" id="nodeGrid">
+          <div class="node-card" data-status="online" id="node1Card">
+            <p class="node-id">Node_001 (Mushroom)</p>
+            <p class="node-status">Status: <span class="node-pill online">ONLINE</span></p>
+            <p class="node-battery">Battery: <span class="node-battery-value" id="node1Battery">88%</span>
+              <span class="node-mode-tag realtime" id="node1Mode">Real-Time</span></p>
+          </div>
+          <div class="node-card" data-status="online" id="node2Card">
+            <p class="node-id">Node_002 (Nanofertilizer)</p>
+            <p class="node-status">Status: <span class="node-pill online">ONLINE</span></p>
+            <p class="node-battery">Battery: <span class="node-battery-value" id="node2Battery">81%</span>
+              <span class="node-mode-tag realtime" id="node2Mode">Real-Time</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>NanoAgriSense · Field readings update every 15 minutes</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NanoAgriSense — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-mark"></span>
+    NanoAgriSense
+  </div>
+  <div class="status">
+    <span>Status:</span>
+    <span class="status-dot" aria-hidden="true"></span>
+    <span class="status-label">ONLINE</span>
+  </div>
+</header>
+
+<main class="stage">
+  <div class="login-card">
+    <div class="login-head">
+      <h1>Welcome back!</h1>
+      <p>Login to NanoAgriSense.</p>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="mobile">Mobile number</label>
+        <div class="phone-field">
+          <span class="country-code">🇵🇭 +63</span>
+          <input
+            type="tel"
+            id="mobile"
+            name="mobile"
+            placeholder="9XX XXX XXXX"
+            inputmode="numeric"
+            autocomplete="tel-national"
+            required
+          >
+        </div>
+        <p class="error-text" id="mobileError" role="alert"></p>
+      </div>
+
+      <button type="submit" class="otp-btn" id="sendBtn">Send OTP through SMS</button>
+    </form>
+
+    <div class="divider">or</div>
+    <p class="alt-links">Trouble signing in? <a href="#">Contact your field admin</a></p>
+  </div>
+</main>
+
+<script src="script.js"></script>
+
+</body>
+</html>

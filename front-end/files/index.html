@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NanoAgriSense — Soil Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-mark"></span>
+    NanoAgriSense
+  </div>
+
+  <div class="weather-widget">
+    <span class="weather-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#4c7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="10" r="4"></circle>
+        <path d="M17.5 17.5a3.5 3.5 0 0 0 0-7 4.5 4.5 0 0 0-8.6-1.4"></path>
+        <path d="M6 18h11.5"></path>
+      </svg>
+    </span>
+    <div class="weather-copy">
+      <p class="weather-plot">Tarlac Tomato Plot A</p>
+      <p class="weather-detail">
+        Cloudy · 25.5°C
+        <span class="divider-dot"></span>
+        <span id="fieldClock" class="weather-clock">--:--:--</span>
+      </p>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#" class="active">Home</a>
+    <a href="#">Sensors</a>
+    <a href="#">Reports</a>
+    <a href="#">Settings</a>
+  </nav>
+</header>
+
+<main>
+  <div class="panel">
+
+    <div class="top-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="left-col">
+
+        <div class="greeting-card">
+          <h1 class="greeting-title">Good afternoon.</h1>
+          <p class="greeting-body">
+            Current condition of your soil is<br>
+            <span class="status-word">Optimal</span>
+          </p>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Time</th><th>Date</th><th>Value</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>14:32</td><td>Aug 11</td><td class="mono">6.7 pH</td><td><span class="status-pill ok">Normal</span></td></tr>
+                <tr><td>13:02</td><td>Aug 11</td><td class="mono">41% RH</td><td><span class="status-pill ok">Normal</span></td></tr>
+                <tr><td>11:47</td><td>Aug 11</td><td class="mono">312 ppm N</td><td><span class="status-pill watch">Watch</span></td></tr>
+                <tr><td>09:15</td><td>Aug 11</td><td class="mono">18.4°C</td><td><span class="status-pill ok">Normal</span></td></tr>
+                <tr><td>22:58</td><td>Aug 10</td><td class="mono">2.1 dS/m</td><td><span class="status-pill alert">Alert</span></td></tr>
+                <tr><td>19:20</td><td>Aug 10</td><td class="mono">38% RH</td><td><span class="status-pill ok">Normal</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT VISUAL -->
+      <div class="visual-panel">
+        <div class="visual-head">
+          <h3>Moisture trend — 24h</h3>
+          <span>Sensor cluster B-3</span>
+        </div>
+        <div class="chart-area">
+          <svg viewBox="0 0 360 200" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#4c7a3a" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#4c7a3a" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g stroke="#eae5c9" stroke-width="1">
+              <line x1="0" y1="30" x2="360" y2="30"/>
+              <line x1="0" y1="80" x2="360" y2="80"/>
+              <line x1="0" y1="130" x2="360" y2="130"/>
+              <line x1="0" y1="180" x2="360" y2="180"/>
+            </g>
+            <path d="M0,180 L0,120 L36,132 L72,100 L108,110 L144,78 L180,92 L216,60 L252,70 L288,45 L324,58 L360,40 L360,180 Z" fill="url(#fillGrad)"/>
+            <polyline points="0,120 36,132 72,100 108,110 144,78 180,92 216,60 252,70 288,45 324,58 360,40"
+              fill="none" stroke="#4c7a3a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <g fill="#4c7a3a">
+              <circle cx="0" cy="120" r="4"/>
+              <circle cx="144" cy="78" r="4"/>
+              <circle cx="252" cy="70" r="4"/>
+              <circle cx="360" cy="40" r="5" stroke="#fff" stroke-width="2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#4c7a3a"></i>Soil moisture %</span>
+          <span><i class="dot" style="background:#c9c19a"></i>Target band</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- METRICS PANEL -->
+    <div class="metrics-panel">
+      <h3 class="metrics-title">Nutrient &amp; condition breakdown</h3>
+
+      <div class="bars-grid">
+        <div class="bar-group">
+          <div class="bar-row">
+            <span class="bar-label">Nitrogen (N)</span>
+            <span class="bar-track"><span class="bar-fill violet" style="width:49%"></span></span>
+            <span class="bar-value violet">49%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Phosphorus (P)</span>
+            <span class="bar-track"><span class="bar-fill violet" style="width:49%"></span></span>
+            <span class="bar-value violet">49%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Moisture</span>
+            <span class="bar-track"><span class="bar-fill teal" style="width:88%"></span></span>
+            <span class="icon-check">✓</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Salinity</span>
+            <span class="bar-track"><span class="bar-fill crimson" style="width:22%"></span></span>
+            <span class="icon-x">✕</span>
+          </div>
+        </div>
+
+        <div class="bar-group">
+          <div class="bar-row">
+            <span class="bar-label">Potassium (K)</span>
+            <span class="bar-track"><span class="bar-fill violet" style="width:49%"></span></span>
+            <span class="bar-value violet">49%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Organic matter</span>
+            <span class="bar-track"><span class="bar-fill violet" style="width:49%"></span></span>
+            <span class="bar-value violet">49%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Aeration</span>
+            <span class="bar-track"><span class="bar-fill teal" style="width:91%"></span></span>
+            <span class="icon-check">✓</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Compaction</span>
+            <span class="bar-track"><span class="bar-fill crimson" style="width:30%"></span></span>
+            <span class="icon-x">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gauges-grid" id="gauges"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer>NanoAgriSense · Field readings update every 15 minutes</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>
