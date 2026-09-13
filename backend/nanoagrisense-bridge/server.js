@@ -4,16 +4,16 @@ const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
 
+// Initialize Firebase Admin SDK
 const serviceAccount = require('./serviceAccountKey.json');
 
 if (getApps().length === 0) {
-    initializeApp({
-        credential: cert(serviceAccount)
-    });
+  initializeApp({
+    credential: cert(serviceAccount)
+  });
 }
 
 const db = getFirestore();
-
 const app = express();
 
 // Middleware
@@ -22,232 +22,240 @@ app.use(express.json());
 
 // ==========================================
 // Auth Middleware: verifies Firebase ID token
-// Client must send: Authorization: Bearer <idToken>
+// Client must send: Authorization: Bearer <token>
 // ==========================================
-async function authenticateUser(req, res, next) {
-  try {
-    const authHeader = req.headers.authorization || '';
-    const [scheme, token] = authHeader.split(' ');
+const authenticateUser = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'Unauthorized: No token provided.' });
+  }
 
-    if (scheme !== 'Bearer' || !token) {
-      return res.status(401).json({
-        success: false,
-        message: "Missing or malformed Authorization header. Expected 'Bearer <idToken>'."
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await getAuth().verifyIdToken(idToken);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    console.error('❌ Token Verification Error:', error);
+    return res.status(403).json({ success: false, error: 'Unauthorized: Invalid token.' });
+  }
+};
+
+// ==========================================
+// TELEMETRY THRESHOLD CHECK HELPER
+// ==========================================
+async function checkTelemetryThresholds(nodeId, payload) {
+  try {
+    const { moisture, pH } = payload;
+    const alertsCollection = db.collection('system_alerts');
+
+    // 1. Soil Moisture Check (< 40.0%) - Sugeno Lower Limit
+    if (moisture !== undefined && moisture < 40.0) {
+      const alertId = `ALT_MOIST_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      await alertsCollection.doc(alertId).set({
+        alert_id: alertId,
+        node_id: nodeId,
+        type: 'CRITICAL',
+        parameter: 'moisture',
+        value: moisture,
+        alert_message: `Critical: Soil moisture has dropped below Sugeno lower limit (${moisture}% < 40.0%) on Node ${nodeId}`,
+        is_resolved: false,
+        timestamp: FieldValue.serverTimestamp()
       });
+      console.log(`⚠️ CRITICAL Alert generated for Node ${nodeId}: Moisture is low (${moisture}%)`);
     }
 
-    const decodedToken = await getAuth().verifyIdToken(token);
-    req.user = decodedToken; // e.g. req.user.email, req.user.phone_number, req.user.uid
-
-    return next();
+    // 2. Soil pH Check (< 5.5 Acidic or > 7.0 Alkaline)
+    if (pH !== undefined) {
+      if (pH < 5.5) {
+        const alertId = `ALT_PH_LOW_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        await alertsCollection.doc(alertId).set({
+          alert_id: alertId,
+          node_id: nodeId,
+          type: 'WARNING',
+          parameter: 'pH',
+          value: pH,
+          alert_message: `Acidic Soil Warning: Soil pH is too low (${pH} < 5.5) on Node ${nodeId}. Crops require buffering.`,
+          is_resolved: false,
+          timestamp: FieldValue.serverTimestamp()
+        });
+        console.log(`⚠️ WARNING Alert generated for Node ${nodeId}: Low pH (${pH})`);
+      } else if (pH > 7.0) {
+        const alertId = `ALT_PH_HIGH_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        await alertsCollection.doc(alertId).set({
+          alert_id: alertId,
+          node_id: nodeId,
+          type: 'WARNING',
+          parameter: 'pH',
+          value: pH,
+          alert_message: `Alkaline Soil Warning: Soil pH is too high (${pH} > 7.0) on Node ${nodeId}`,
+          is_resolved: false,
+          timestamp: FieldValue.serverTimestamp()
+        });
+        console.log(`⚠️ WARNING Alert generated for Node ${nodeId}: High pH (${pH})`);
+      }
+    }
   } catch (error) {
-    console.error("❌ Auth Middleware Error:", error.message);
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired authentication token."
-    });
+    console.error('❌ Error in checkTelemetryThresholds helper:', error);
   }
 }
 
 // ==========================================
-// REST API Bridge Endpoint: POST /api/telemetry
+// API ROUTES
 // ==========================================
+
+// 1. POST /api/telemetry - Ingest Modbus/RS485 sensor data from field nodes
 app.post('/api/telemetry', async (req, res) => {
   try {
-    const payload = req.body;
-
-    // 1. Schema Validation
-    if (!payload.node_id) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Missing required 'node_id' field in payload root." 
-      });
-    }
-    if (!payload.decoded_payload) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Missing 'decoded_payload' object containing telemetry metrics." 
-      });
+    const { node_id, telemetry_data } = req.body;
+    if (!node_id || !telemetry_data) {
+      return res.status(400).json({ success: false, error: 'Missing node_id or telemetry_data.' });
     }
 
-    const { decoded_payload } = payload;
-
-    // 2. Sanitize and Map Incoming Payload to Firestore Schema
-    const telemetryData = {
-      timestamp: FieldValue.serverTimestamp(), // Google Server-side timestamp
-      soil_moisture: parseFloat(decoded_payload.soil_moisture),
-      soil_temperature: parseFloat(decoded_payload.soil_temperature),
-      soil_ph: parseFloat(decoded_payload.soil_ph),
-      carbon_dioxide: parseFloat(decoded_payload.carbon_dioxide),
-      nutrients_npk: {
-        nitrogen_n: parseFloat(decoded_payload.nitrogen_n),
-        phosphorus_p: parseFloat(decoded_payload.phosphorus_p),
-        potassium_k: parseFloat(decoded_payload.potassium_k)
-      }
-    };
-
-    // 3. Write securely to subcollection: nodes/{node_id}/telemetry
-    const docRef = await db
-      .collection('nodes')
-      .doc(payload.node_id)
-      .collection('telemetry')
-      .add(telemetryData);
-
-    console.log(`✅ Telemetry written for ${payload.node_id}. Doc ID: ${docRef.id}`);
-
-    return res.status(201).json({
-      success: true,
-      message: "Telemetry structured and written successfully.",
-      document_id: docRef.id
+    // Write telemetry log to Firestore
+    await db.collection('telemetry').add({
+      node_id,
+      ...telemetry_data,
+      timestamp: FieldValue.serverTimestamp()
     });
 
+    // Automatically check thresholds and trigger alerts
+    await checkTelemetryThresholds(node_id, telemetry_data);
+
+    return res.status(200).json({ success: true, message: 'Telemetry logged and evaluated.' });
   } catch (error) {
-    console.error("❌ API Bridge Endpoint Error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
-
-// =======================================================
-// COMMANDS API: POST /api/actuators/override
-// Triggers a manual override of water/nutrient pumps or agitators
-// =======================================================
-app.post('/api/actuators/override', authenticateUser, async (req, res) => {
-  try {
-    const { actuator_id, state, duration_seconds, pwm_duty_cycle } = req.body;
-
-    // 1. Core Validations
-    if (!actuator_id) {
-      return res.status(400).json({ success: false, message: "Missing 'actuator_id'." });
-    }
-    if (state !== 'ON' && state !== 'OFF') {
-      return res.status(400).json({ success: false, message: "State must be 'ON' or 'OFF'." });
-    }
-
-    // 2. Reference the Actuator Document in Firestore
-    const actuatorRef = db.collection('actuators').doc(actuator_id);
-    const doc = await actuatorRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: "Actuator not found." });
-    }
-
-    // 3. Update the Actuator Document State
-    // Set control_override_active to true to suppress the Sugeno Fuzzy controller loops
-    await actuatorRef.update({
-      current_state: state,
-      control_override_active: true,
-      "fuzzy_outputs.sugeno_calculated_speed": state === 'ON' ? (pwm_duty_cycle || 100.0) : 0.0
-    });
-
-    // 4. Transactional Logging: Append to 'actuation_logs' subcollection
-    const logData = {
-      log_id: `LOG_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      timestamp: FieldValue.serverTimestamp(),
-      duration_seconds: duration_seconds ? parseInt(duration_seconds) : 0,
-      triggered_by: 'Manual Override',
-      execution_parameters: {
-        pump_pwm_duty_cycle: state === 'ON' ? (pwm_duty_cycle || 255) : 0,
-        dosed_volume_liters: state === 'ON' ? (duration_seconds ? (duration_seconds * 0.05) : 0.0) : 0.0 // Automated calibration fallback
-      }
-    };
-
-    await actuatorRef.collection('actuation_logs').add(logData);
-
-    console.log(`🔧 Manual Override executed for ${actuator_id} -> ${state} by operator ${req.user.email || req.user.phone_number}`);
-
-    return res.status(200).json({
-      success: true,
-      message: `Manual override set to ${state} for ${actuator_id}. Transaction logged.`,
-      log_details: logData
-    });
-
-  } catch (error) {
-    console.error("❌ Commands API Override Error:", error);
+    console.error('❌ Telemetry Ingestion Error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
 
-
-// =======================================================
-// COMMANDS API: POST /api/actuators/release
-// Releases manual override to return control to Sugeno Fuzzy Logic Auto Loops
-// =======================================================
-app.post('/api/actuators/release', authenticateUser, async (req, res) => {
-  try {
-    const { actuator_id } = req.body;
-
-    if (!actuator_id) {
-      return res.status(400).json({ success: false, message: "Missing 'actuator_id'." });
-    }
-
-    const actuatorRef = db.collection('actuators').doc(actuator_id);
-    const doc = await actuatorRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ success: false, message: "Actuator not found." });
-    }
-
-    // Turn control_override_active off
-    await actuatorRef.update({
-      control_override_active: false
-    });
-
-    console.log(`🍃 Override released for ${actuator_id}. Sugeno Fuzzy Auto-Control resumed.`);
-
-    return res.status(200).json({
-      success: true,
-      message: `Override released. Actuator ${actuator_id} is now under Sugeno Auto-Control.`
-    });
-
-  } catch (error) {
-    console.error("❌ Commands API Release Error:", error);
-    return res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-
-// =======================================================
-// HARDWARE GATEWAY DOWNLINK: GET /api/actuators/commands
-// Fetches active commands so the physical LoRa Gateway can pull and execute them
-// =======================================================
+// 2. GET /api/actuators/commands - Gateway downlink route for hardware polling
 app.get('/api/actuators/commands', async (req, res) => {
   try {
-    const { target_node } = req.query; // e.g., ?target_node=NODE-001
+    const targetNode = req.query.target_node || 'NODE-001';
+    const snapshot = await db.collection('actuators').doc(targetNode).get();
 
-    if (!target_node) {
-      return res.status(400).json({ success: false, message: "Missing target_node." });
+    if (!snapshot.exists) {
+      return res.status(404).json({ success: false, error: `No actuator profile found for ${targetNode}` });
     }
 
-    const snapshot = await db.collection('actuators')
-                             .where('target_node', '==', target_node)
-                             .get();
-
-    const activeCommands = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      activeCommands.push({
-        actuator_id: doc.id,
-        type: data.type,
-        current_state: data.current_state,
-        control_override_active: data.control_override_active,
-        pwm_speed: data.fuzzy_outputs?.sugeno_calculated_speed || 0
-      });
-    });
-
-    return res.status(200).json({ success: true, actuators: activeCommands });
+    return res.status(200).json({ success: true, node_id: targetNode, data: snapshot.data() });
   } catch (error) {
-    console.error("❌ GET Commands Error:", error);
+    console.error('❌ GET Commands Error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// ==========================================
-// Start Server (Railway automatically injects the PORT variable)
-// ==========================================
-const PORT = process.env.PORT || 3000;
+// 3. POST /api/actuators/override - Manual override for pumps/agitators (Auth Protected)
+app.post('/api/actuators/override', authenticateUser, async (req, res) => {
+  try {
+    const { node_id, actuator_type, state, duration_sec } = req.body;
+    const operator = req.user?.email || req.user?.phone_number || 'Authorized Operator';
+
+    await db.collection('actuators').doc(node_id || 'NODE-001').set({
+      manual_override: true,
+      override_by: operator,
+      actuator_states: {
+        [actuator_type]: state
+      },
+      override_duration: duration_sec || 300,
+      updated_at: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // Log the actuation event
+    await db.collection('actuation_logs').add({
+      node_id: node_id || 'NODE-001',
+      actuator_type,
+      action: 'MANUAL_OVERRIDE',
+      state,
+      triggered_by: operator,
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    return res.status(200).json({ success: true, message: `Manual override engaged for ${actuator_type}.` });
+  } catch (error) {
+    console.error('❌ Actuator Override Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 4. POST /api/actuators/release - Release manual override back to Sugeno auto mode (Auth Protected)
+app.post('/api/actuators/release', authenticateUser, async (req, res) => {
+  try {
+    const { node_id } = req.body;
+    const operator = req.user?.email || req.user?.phone_number || 'Authorized Operator';
+
+    await db.collection('actuators').doc(node_id || 'NODE-001').set({
+      manual_override: false,
+      released_by: operator,
+      updated_at: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return res.status(200).json({ success: true, message: 'Control released back to Sugeno Auto Mode.' });
+  } catch (error) {
+    console.error('❌ Actuator Release Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 5. GET /api/alerts - Fetch active unresolved system alerts
+app.get('/api/alerts', async (req, res) => {
+  try {
+    const limitVal = parseInt(req.query.limit) || 20;
+    const snapshot = await db.collection('system_alerts')
+                             .where('is_resolved', '==', false)
+                             .orderBy('timestamp', 'desc')
+                             .limit(limitVal)
+                             .get();
+
+    const alerts = [];
+    snapshot.forEach(doc => {
+      alerts.push(doc.data());
+    });
+
+    return res.status(200).json({ success: true, alerts });
+  } catch (error) {
+    console.error('❌ GET Alerts Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 6. PATCH /api/alerts/:alert_id/resolve - Mark a specific alert as resolved (Auth Protected)
+app.patch('/api/alerts/:alert_id/resolve', authenticateUser, async (req, res) => {
+  try {
+    const { alert_id } = req.params;
+    const operator = req.user?.email || req.user?.phone_number || 'Authorized Operator';
+
+    const alertRef = db.collection('system_alerts').doc(alert_id);
+    const doc = await alertRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, message: 'Alert not found.' });
+    }
+
+    await alertRef.update({
+      is_resolved: true,
+      resolved_by: operator,
+      resolved_at: FieldValue.serverTimestamp()
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Alert ${alert_id} has been marked as resolved.`
+    });
+  } catch (error) {
+    console.error('❌ PATCH Resolve Alert Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Root Health Check Route
+app.get('/', (req, res) => {
+  res.status(200).send('🌱 NanoAgriSense Bridge API is running.');
+});
+
+// Start Server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🛰️ Express Bridge Server listening on port ${PORT}`);
+  console.log(`🚀 NanoAgriSense server running on port ${PORT}`);
 });
