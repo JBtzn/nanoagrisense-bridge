@@ -1,0 +1,544 @@
+:root{
+  --cream: #f6f2da;
+  --cream-deep: #efe9c9;
+  --ink: #2c2a1e;
+  --ink-soft: #5c5a48;
+
+  /* Greens stay close to the logo's leaf gradient */
+  --leaf: #4c7a3a;
+  --leaf-dark: #2f4f22;
+  --leaf-light: #e4ecd8;
+  --leaf-mist: #b7d19c;
+
+  /* Sky/cyan pulled from the logo's ring gradient + wifi & pin glyph */
+  --teal: #1f7fa0;
+  --teal-track: #d9edf4;
+
+  /* Harvest gold/ochre — mineral & nutrient accent */
+  --violet: #a97a2b;
+  --violet-track: #f1e6cc;
+
+  /* Terracotta/rust — dry soil & clay */
+  --crimson: #a8472e;
+  --crimson-track: #f1ded2;
+
+  --card-border: #d8d0a4;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  background: var(--cream);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(76,122,58,0.09) 1px, transparent 0);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3, .brand{
+  font-family: 'Inter', sans-serif;
+}
+
+/* ---------- HEADER ---------- */
+header{
+  display:flex;
+  align-items:center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px clamp(20px, 5vw, 64px) 8px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap: 14px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-right: auto;
+}
+
+.brand-mark{
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ---------- NOTIFICATION BELL + PANEL ---------- */
+.notif-wrap{
+  position: relative;
+}
+
+.bell-btn{
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+.bell-btn svg{ width: 23px; height: 23px; }
+.bell-btn:hover{ background: rgba(44,42,30,0.08); }
+.bell-btn:active{ transform: translateY(1px); }
+.bell-btn[aria-expanded="true"]{ background: rgba(44,42,30,0.1); }
+
+.notif-badge{
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--crimson);
+  color: #fffdf3;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 17px;
+  text-align: center;
+  border: 2px solid var(--cream);
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.notif-badge.is-hidden{
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+}
+
+.notif-panel{
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 380px;
+  max-width: min(92vw, 380px);
+  background: var(--cream);
+  border: 2.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 6px 7px 0 rgba(44,42,30,0.9);
+  z-index: 50;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.notif-panel.open{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.notif-panel-head{
+  padding: 18px 20px 12px;
+  border-bottom: 2px solid var(--ink);
+}
+.notif-panel-head h3{ margin: 0; font-size: 1.15rem; }
+.notif-panel-sub{ font-size: 0.78rem; color: var(--ink-soft); }
+
+.notif-scroll{
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 6px 0 10px;
+}
+
+.notif-tier{ padding: 10px 20px 4px; }
+
+.notif-tier-title{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  margin: 6px 0 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.notif-tier-title .tier-dot{
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.notif-tier-critical .tier-dot{ background: var(--crimson); }
+.notif-tier-warning .tier-dot{ background: var(--violet); }
+.notif-tier-log .tier-dot{ background: var(--teal); }
+
+.tier-count{
+  margin-left: auto;
+  background: rgba(44,42,30,0.08);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+}
+
+.notif-list{ display:flex; flex-direction:column; gap: 8px; margin-bottom: 6px; }
+
+.notif-empty{
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  padding: 2px 2px 8px;
+}
+
+.notif-item{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  background: #fffdf3;
+  border: 1.5px solid var(--card-border);
+  border-left: 4px solid transparent;
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: background 0.4s ease, opacity 0.4s ease;
+}
+.notif-tier-critical .notif-item{ border-left-color: var(--crimson); }
+.notif-tier-warning .notif-item{ border-left-color: var(--violet); }
+.notif-tier-log .notif-item{ border-left-color: var(--teal); }
+
+.notif-item.unread{ background: var(--leaf-light); }
+.notif-tier-critical .notif-item.unread{ background: var(--crimson-track); }
+.notif-tier-warning .notif-item.unread{ background: var(--violet-track); }
+.notif-tier-log .notif-item.unread{ background: var(--teal-track); }
+
+.notif-item-icon{
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink: 0;
+  background: #fff;
+}
+.notif-item-icon svg{ width: 14px; height: 14px; }
+.notif-tier-critical .notif-item-icon{ color: var(--crimson); }
+.notif-tier-warning .notif-item-icon{ color: var(--violet); }
+.notif-tier-log .notif-item-icon{ color: var(--teal); }
+
+.notif-item-body{ min-width: 0; }
+.notif-item-msg{
+  margin: 0 0 3px;
+  font-size: 0.86rem;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.notif-item-time{
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px){
+  .notif-panel{ right: -12px; }
+}
+
+/* ---------- NAV ---------- */
+nav{
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--cream);
+  padding: 6px 8px;
+  display:flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+@media (max-width: 900px){
+  nav a{ padding: 8px 12px; font-size: 0.86rem; }
+}
+
+nav a{
+  text-decoration:none;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 16px;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+nav a.active{ background: var(--leaf); color: #fff; }
+nav a:not(.active):hover{ background: var(--leaf-light); }
+
+/* Nav item that reveals its full name on hover (Irrigation System and Nutrient Control Center) */
+nav a.nav-expand{
+  display:inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 92px;
+  transition: max-width 0.35s ease, background 0.15s ease;
+  vertical-align: middle;
+}
+nav a.nav-expand:hover,
+nav a.nav-expand:focus-visible{
+  max-width: 340px;
+}
+
+@media (max-width: 900px){
+  nav a.nav-expand{ max-width: 80px; }
+  nav a.nav-expand:hover,
+  nav a.nav-expand:focus-visible{ max-width: 280px; }
+}
+
+/* ---------- LAYOUT SHELL ---------- */
+main{
+  max-width: 1280px;
+  margin: 18px auto 64px;
+  padding: 0 clamp(20px, 5vw, 64px);
+}
+
+.panel{
+  background: var(--cream);
+  border: 2.5px solid var(--ink);
+  border-radius: 28px;
+  padding: clamp(18px, 3vw, 34px);
+  min-height: 420px;
+}
+
+/* ---------- FOOTER ---------- */
+footer{
+  text-align:center;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  padding: 0 20px 30px;
+}
+
+/* =========================================================
+   CONTROL PANEL
+   ========================================================= */
+
+.control-panel-title{
+  margin: 0 0 14px 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: underline;
+  color: var(--ink);
+}
+
+.control-panel-card{
+  border: 2px dashed var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--cream);
+  padding: 24px clamp(18px, 3vw, 30px) 30px;
+}
+
+.cp-section{ margin-bottom: 30px; }
+.cp-section:last-child{ margin-bottom: 0; }
+
+.cp-section-title{
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---- Buttons shared by toggle + valve controls ---- */
+.cp-btn{
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--cream);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+.cp-btn:hover:not(:disabled){ background: var(--leaf-light); }
+.cp-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
+.cp-btn:disabled:hover{ background: var(--cream); }
+
+/* ---- Automatic irrigation row ---- */
+.cp-auto-row{
+  display:flex;
+  align-items:center;
+  flex-wrap: wrap;
+  gap: 16px 22px;
+}
+
+.cp-btn-toggle.is-on{ background: var(--leaf); color: #fff; border-color: var(--ink); }
+.cp-btn-toggle.is-on:hover{ background: var(--leaf-dark); }
+.cp-btn-toggle.is-off{ background: var(--cream); color: var(--ink); }
+
+.cp-status{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.cp-status-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  flex-shrink: 0;
+}
+.cp-status-icon svg{ width: 12px; height: 12px; }
+.cp-status-icon.on{ background: var(--leaf); }
+.cp-status-icon.off{ background: var(--crimson); }
+
+/* ---- Manual override / valves ---- */
+.cp-reservoirs{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 34px 48px;
+}
+
+.cp-reservoir-label{
+  margin: 0 0 10px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
+.cp-valve-group{
+  display:flex;
+  gap: 10px;
+}
+
+.cp-valve-btn.is-active[data-action="open"]{ background: var(--leaf); color: #fff; }
+.cp-valve-btn.is-active[data-action="open"]:hover:not(:disabled){ background: var(--leaf-dark); }
+.cp-valve-btn.is-active[data-action="close"]{ background: var(--crimson); color: #fff; border-color: var(--ink); }
+.cp-valve-btn.is-active[data-action="close"]:hover:not(:disabled){ background: var(--crimson); }
+
+/* ---- Water level sensors ---- */
+.cp-sensor-tabs{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 760px){
+  .cp-sensor-tabs{ grid-template-columns: 1fr; }
+}
+
+.cp-sensor-tab{
+  display:inline-block;
+  justify-self: start;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  background: var(--cream);
+}
+
+.cp-sensor-grid{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 760px){
+  .cp-sensor-grid{ grid-template-columns: 1fr; }
+}
+
+.cp-sensor-card{
+  background: var(--leaf-mist);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 18px 20px 20px;
+}
+
+.cp-sensor-top{
+  display:flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 14px;
+}
+
+.cp-sensor-level{
+  margin: 0 0 2px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+
+.cp-sensor-status{
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+.cp-sensor-status.low{ color: var(--crimson); }
+.cp-sensor-status.adequate{ color: var(--leaf-dark); }
+.cp-sensor-status.high{ color: var(--crimson); }
+
+.cp-sensor-meta{
+  text-align: right;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+.cp-sensor-meta p{ margin: 0 0 2px; }
+
+.cp-sensor-scale{
+  display:flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--ink);
+  padding: 0 2px;
+  margin-bottom: 8px;
+}
+
+.cp-sensor-track{
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(44,42,30,0.35);
+  margin: 0 10px;
+}
+
+.cp-sensor-fill{
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink);
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.cp-sensor-handle{
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: translate(-50%, -50%);
+  transition: left 0.6s ease;
+}
+
+.cp-sensor-percent{
+  margin: 10px 0 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
