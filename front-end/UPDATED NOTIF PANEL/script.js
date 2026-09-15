@@ -5,6 +5,8 @@
    teal (sky) #1f7fa0 / crimson (terracotta) #a8472e / cream #f6f2da
    ========================================================= */
 
+const API_BASE_URL = 'https://nanoagrisense-bridge.onrender.com';
+
 // Shared plot area — left margin reserved for y-axis value labels
 const PLOT_LEFT = 34, PLOT_RIGHT = 352, PX_TOP = 20, PX_BOTTOM = 180;
 
@@ -695,27 +697,105 @@ function nudgeChartsData(){
   });
 }
 
-function fieldTick(){
-  // Drain each node's solar battery a little each cycle
-  overviewNodes.node1.battery = Math.max(15, overviewNodes.node1.battery - (0.3 + Math.random() * 0.5));
-  overviewNodes.node2.battery = Math.max(15, overviewNodes.node2.battery - (0.3 + Math.random() * 0.5));
-  updateNodeCards();
+async function fetchLatestTelemetry() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/telemetry/latest`);
+    const result = await response.json();
 
-  pushLiveReading();
+    if (result.success && result.data) {
+      const node1 = result.data.NODE_001;
+      const node2 = result.data.NODE_002;
 
-  nudgeChartsData();
-  renderChart(currentChart);
+      // Update Node 1 (Mushroom) UI
+      if (node1) {
+        document.getElementById('kpiSoilMoisture').innerHTML = `${node1.moisture || '--'}<span class="kpi-unit">%</span>`;
+        document.getElementById('kpiSoilTemp').innerHTML = `${node1.temperature || '--'}<span class="kpi-unit">°C</span>`;
+        document.getElementById('kpiPh').innerText = node1.pH || '--';
+        if (node1.co2) document.getElementById('kpiCo2').innerHTML = `${node1.co2}<span class="kpi-unit">ppm</span>`;
+      }
 
-  refreshKpiCards();
-  checkFieldNotifications();
-
-  setTimeout(fieldTick, currentIntervalMs());
+      // Update Node 2 (Nanofertilizer) UI
+      if (node2) {
+        document.getElementById('kpiSoilMoistureNode2').innerHTML = `${node2.moisture || '--'}<span class="kpi-unit">%</span>`;
+        document.getElementById('kpiSoilTempNode2').innerHTML = `${node2.temperature || '--'}<span class="kpi-unit">°C</span>`;
+        document.getElementById('kpiPhNode2').innerText = node2.pH || '--';
+        if (node2.co2) document.getElementById('kpiCo2Node2').innerHTML = `${node2.co2}<span class="kpi-unit">ppm</span>`;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching telemetry:', error);
+  }
 }
 
-updateNodeCards();
-refreshKpiCards();
-setTimeout(fieldTick, currentIntervalMs());
+async function fieldTick() {
+  try {
+    // 1. Fetch real telemetry data from your Render backend
+    const response = await fetch(`${API_BASE_URL}/telemetry/latest`);
+    const result = await response.json();
 
+    if (result.success && result.data) {
+      const node1Data = result.data.NODE_001;
+      const node2Data = result.data.NODE_002;
+
+      // Update KPI cards with real database values if available
+      if (node1Data) {
+        updateSensorReadings({
+          soilMoisture: node1Data.moisture,
+          soilTemp: node1Data.temperature,
+          ec: node1Data.ec,
+          ph: node1Data.pH,
+          co2: node1Data.co2
+        }, '');
+      }
+
+      if (node2Data) {
+        updateSensorReadings({
+          soilMoisture: node2Data.moisture,
+          soilTemp: node2Data.temperature,
+          ec: node2Data.ec,
+          ph: node2Data.pH,
+          co2: node2Data.co2
+        }, 'Node2');
+      }
+    }
+
+    // 2. Fetch active system alerts for the notification panel
+    const alertResponse = await fetch(`${API_BASE_URL}/alerts`);
+    const alertResult = await alertResponse.json();
+
+    if (alertResult.success && alertResult.alerts) {
+      // Optional: Sync real alerts into your notification system
+    }
+
+  } catch (error) {
+    console.error('❌ Error fetching live data from Render backend:', error);
+  }
+
+  // Refresh charts and re-trigger the poll every 10 seconds
+  renderChart(currentChart);
+  setTimeout(fieldTick, 10000); 
+}
+
+// 3. INITIALIZE DASHBOARD
+// ==========================================
+function initDashboard() {
+  // Fetch immediately on load
+  fetchLatestTelemetry();
+  fetchAlerts();
+
+  // Poll backend every 10 seconds for real-time updates
+  setInterval(fetchLatestTelemetry, 10000);
+  setInterval(fetchAlerts, 10000);
+}
+
+// Run when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initDashboard);
+
+// Notification Panel Toggle Logic
+document.getElementById('notifBellBtn').addEventListener('click', () => {
+  const panel = document.getElementById('notifPanel');
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+});
 /* =========================================================
    FULLSCREEN TOGGLES — live feed table + chart panel
    ========================================================= */
