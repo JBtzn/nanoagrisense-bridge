@@ -769,7 +769,6 @@ async function fetchAlerts() {
 
 async function fieldTick() {
   try {
-    // 1. Fetch real telemetry data from your Render backend
     const response = await fetch(`${API_BASE_URL}/telemetry/latest`);
     const result = await response.json();
 
@@ -777,41 +776,47 @@ async function fieldTick() {
       const node1Data = result.data.NODE_001;
       const node2Data = result.data.NODE_002;
 
-      // Update KPI cards with real database values if available
+      // Update Node 1 (Mushroom)
       if (node1Data) {
         updateSensorReadings({
-          soilMoisture: node1Data.moisture,
-          soilTemp: node1Data.temperature,
-          ec: node1Data.ec,
-          ph: node1Data.pH,
-          co2: node1Data.co2
+          soilMoisture: Number(node1Data.moisture ?? node1Data.soilMoisture),
+          soilTemp: Number(node1Data.temperature ?? node1Data.soilTemp),
+          ec: node1Data.ec !== undefined ? Number(node1Data.ec) : undefined,
+          ph: Number(node1Data.pH ?? node1Data.ph),
+          co2: node1Data.co2 !== undefined ? Number(node1Data.co2) : undefined,
+          // Extract NPK whether sent as an object or individual n, p, k properties
+          npk: node1Data.npk || (node1Data.n !== undefined ? { 
+            n: Number(node1Data.n), 
+            p: Number(node1Data.p), 
+            k: Number(node1Data.k) 
+          } : undefined)
         }, '');
       }
 
+      // Update Node 2 (Nanofertilizer)
       if (node2Data) {
         updateSensorReadings({
-          soilMoisture: node2Data.moisture,
-          soilTemp: node2Data.temperature,
-          ec: node2Data.ec,
-          ph: node2Data.pH,
-          co2: node2Data.co2
+          soilMoisture: Number(node2Data.moisture ?? node2Data.soilMoisture),
+          soilTemp: Number(node2Data.temperature ?? node2Data.soilTemp),
+          ec: node2Data.ec !== undefined ? Number(node2Data.ec) : undefined,
+          ph: Number(node2Data.pH ?? node2Data.ph),
+          co2: node2Data.co2 !== undefined ? Number(node2Data.co2) : undefined,
+          npk: node2Data.npk || (node2Data.n !== undefined ? { 
+            n: Number(node2Data.n), 
+            p: Number(node2Data.p), 
+            k: Number(node2Data.k) 
+          } : undefined)
         }, 'Node2');
       }
     }
 
-    // 2. Fetch active system alerts for the notification panel
     const alertResponse = await fetch(`${API_BASE_URL}/alerts`);
     const alertResult = await alertResponse.json();
-
-    if (alertResult.success && alertResult.alerts) {
-      // Optional: Sync real alerts into your notification system
-    }
 
   } catch (error) {
     console.error('❌ Error fetching live data from Render backend:', error);
   }
 
-  // Refresh charts and re-trigger the poll every 10 seconds
   renderChart(currentChart);
   setTimeout(fieldTick, 10000); 
 }
