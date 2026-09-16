@@ -134,6 +134,31 @@ app.post('/api/telemetry', async (req, res) => {
   }
 });
 
+// ADD THIS TO server.js:
+app.get('/api/telemetry/latest', async (req, res) => {
+  try {
+    const node1Snap = await db.collection('telemetry')
+      .where('node_id', '==', 'NODE-001')
+      .orderBy('timestamp', 'desc')
+      .limit(1).get();
+
+    const node2Snap = await db.collection('telemetry')
+      .where('node_id', '==', 'NODE-002')
+      .orderBy('timestamp', 'desc')
+      .limit(1).get();
+
+    const data = {
+      NODE_001: node1Snap.empty ? null : node1Snap.docs[0].data(),
+      NODE_002: node2Snap.empty ? null : node2Snap.docs[0].data()
+    };
+
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('❌ GET Latest Telemetry Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // 2. GET /api/actuators/commands - Gateway downlink route for hardware polling
 app.get('/api/actuators/commands', async (req, res) => {
   try {
