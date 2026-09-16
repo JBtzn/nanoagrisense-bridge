@@ -5,7 +5,7 @@
    teal (sky) #1f7fa0 / crimson (terracotta) #a8472e / cream #f6f2da
    ========================================================= */
 
-const API_BASE_URL = 'https://nanoagrisense-bridge.onrender.com';
+const API_BASE_URL = 'https://nanoagrisense-bridge.onrender.com/api';
 
 // Shared plot area — left margin reserved for y-axis value labels
 const PLOT_LEFT = 34, PLOT_RIGHT = 352, PX_TOP = 20, PX_BOTTOM = 180;
@@ -724,6 +724,46 @@ async function fetchLatestTelemetry() {
     }
   } catch (error) {
     console.error('Error fetching telemetry:', error);
+  }
+}
+
+// ==========================================
+// FETCH & DISPLAY ALERTS
+// ==========================================
+async function fetchAlerts() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/alerts`);
+    const result = await response.json();
+
+    if (result.success) {
+      const alerts = result.alerts;
+      
+      const criticalAlerts = alerts.filter(a => a.type === 'CRITICAL');
+      const warningAlerts = alerts.filter(a => a.type === 'WARNING');
+
+      // Update Notification Badges
+      document.getElementById('notifBadge').innerText = alerts.length;
+      document.getElementById('critCount').innerText = criticalAlerts.length;
+      document.getElementById('warnCount').innerText = warningAlerts.length;
+
+      // Populate Critical Alerts List
+      const critList = document.getElementById('critList');
+      if (critList) {
+        critList.innerHTML = criticalAlerts.map(alert => 
+          `<div class="notif-item"><strong>Node: ${alert.node_id}</strong><br>${alert.alert_message}</div>`
+        ).join('') || '<p class="notif-empty">No critical alerts.</p>';
+      }
+
+      // Populate Warning Alerts List
+      const warnList = document.getElementById('warnList');
+      if (warnList) {
+        warnList.innerHTML = warningAlerts.map(alert => 
+          `<div class="notif-item"><strong>Node: ${alert.node_id}</strong><br>${alert.alert_message}</div>`
+        ).join('') || '<p class="notif-empty">No warnings.</p>';
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching alerts:', error);
   }
 }
 

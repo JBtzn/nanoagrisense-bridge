@@ -19,7 +19,7 @@ const app = express();
 // Middleware
 const corsOptions = {
   // Be sure to change this URL to your actual Vercel URL once it finishes deploying!
-  origin: 'https://nanoagrisense-bridge.vercel.app/', 
+  origin: 'https://nanoagrisense-bridge.vercel.app', 
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
