@@ -17,7 +17,12 @@ const db = getFirestore();
 const app = express();
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  // Be sure to change this URL to your actual Vercel URL once it finishes deploying!
+  origin: 'https://nanoagrisense-bridge.vercel.app/', 
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // ==========================================
