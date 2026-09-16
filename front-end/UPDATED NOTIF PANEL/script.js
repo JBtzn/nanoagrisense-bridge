@@ -769,7 +769,7 @@ async function fetchAlerts() {
 
 async function fieldTick() {
   try {
-    const response = await fetch(`${API_BASE_URL}/telemetry/latest`);
+    const response = await fetch(`${API_BASE_URL}/telemetry/latest?=${Date.now()}`);
     const result = await response.json();
 
     if (result.success && result.data) {
