@@ -697,36 +697,6 @@ function nudgeChartsData(){
   });
 }
 
-async function fetchLatestTelemetry() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/telemetry/latest`);
-    const result = await response.json();
-
-    if (result.success && result.data) {
-      const node1 = result.data.NODE_001;
-      const node2 = result.data.NODE_002;
-
-      // Update Node 1 (Mushroom) UI
-      if (node1) {
-        document.getElementById('kpiSoilMoisture').innerHTML = `${node1.moisture || '--'}<span class="kpi-unit">%</span>`;
-        document.getElementById('kpiSoilTemp').innerHTML = `${node1.temperature || '--'}<span class="kpi-unit">°C</span>`;
-        document.getElementById('kpiPh').innerText = node1.pH || '--';
-        if (node1.co2) document.getElementById('kpiCo2').innerHTML = `${node1.co2}<span class="kpi-unit">ppm</span>`;
-      }
-
-      // Update Node 2 (Nanofertilizer) UI
-      if (node2) {
-        document.getElementById('kpiSoilMoistureNode2').innerHTML = `${node2.moisture || '--'}<span class="kpi-unit">%</span>`;
-        document.getElementById('kpiSoilTempNode2').innerHTML = `${node2.temperature || '--'}<span class="kpi-unit">°C</span>`;
-        document.getElementById('kpiPhNode2').innerText = node2.pH || '--';
-        if (node2.co2) document.getElementById('kpiCo2Node2').innerHTML = `${node2.co2}<span class="kpi-unit">ppm</span>`;
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching telemetry:', error);
-  }
-}
-
 // ==========================================
 // FETCH & DISPLAY ALERTS
 // ==========================================
@@ -769,108 +739,94 @@ async function fetchAlerts() {
 
 async function fieldTick() {
   try {
-    // 1. Fetch fresh telemetry from Firebase
     const response = await fetch(`${API_BASE_URL}/telemetry/latest?t=${Date.now()}`);
     const result = await response.json();
 
     if (result.success && result.data) {
       const node1Data = result.data.NODE_001;
 
-      // UPDATE NODE 1 (Mushroom)
       if (node1Data) {
-        // Extract values safely, defaulting to 0 if something is missing
+        // 👉 1. PRINT IT TO THE CONSOLE SO WE CAN SEE IT
+        console.log("📡 Fresh Firebase Data Received:", node1Data);
+
         const moisture = Number(node1Data.moisture || 0);
         const temp = Number(node1Data.temperature || 0);
         const ec = node1Data.ec !== undefined ? Number(node1Data.ec) : 0;
         const ph = Number(node1Data.pH || 0);
         
-        // Extract NPK safely from the Firebase map
-        const n = node1Data.npk ? Number(node1Data.npk.n || 0) : 0;
-        const p = node1Data.npk ? Number(node1Data.npk.p || 0) : 0;
-        const k = node1Data.npk ? Number(node1Data.npk.k || 0) : 0;
+        // 👉 2. FOOLPROOF NPK EXTRACTION
+        let n = 0, p = 0, k = 0;
+        if (node1Data.npk) {
+          n = Number(node1Data.npk.n) || 0;
+          p = Number(node1Data.npk.p) || 0;
+          k = Number(node1Data.npk.k) || 0;
+        }
+        
+        console.log(`🧪 Parsed NPK -> N: ${n}, P: ${p}, K: ${k}`);
 
-        // -----------------------------------------------------
         // A. UPDATE KPI CARDS
-        // -----------------------------------------------------
         updateSensorReadings({
           soilMoisture: moisture,
           soilTemp: temp,
           ec: ec,
           ph: ph,
           npk: { n, p, k }
-        }, ''); // The empty string '' targets Node 1's HTML IDs
+        }, ''); 
 
-        // -----------------------------------------------------
         // B. UPDATE CHART CAROUSEL DATA
-        // -----------------------------------------------------
-        // Shift old data out the left side, push new data in the right side
         chartData.moisture.shift(); chartData.moisture.push(moisture);
         chartData.temp.shift(); chartData.temp.push(temp);
         chartData.ec.shift(); chartData.ec.push(ec);
         chartData.ph.shift(); chartData.ph.push(ph);
         
-        // Update NPK Chart Bars specifically for Node 1
         chartData.npkNodes[0].N = n;
         chartData.npkNodes[0].P = p;
         chartData.npkNodes[0].K = k;
 
-        // -----------------------------------------------------
         // C. UPDATE LIVE FEED TABLE
-        // -----------------------------------------------------
         const feedBody = document.getElementById('feedTableBody');
         if (feedBody) {
           const now = new Date();
           const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-          const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          
-          // Calculate an overall status based on EC (salinity)
-          const statusLabel = ec > 2.5 ? 'Alert' : (ec > 2.0 ? 'Watch' : 'Normal');
           const statusLevel = ec > 2.5 ? 'alert' : (ec > 2.0 ? 'watch' : 'ok');
           const totalNPK = n + p + k;
 
           const rowHtml = `<tr>
-            <td>${time}</td><td>${date}</td><td>Node 1 (Mushroom)</td>
-            <td class="mono readings">${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moisture, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
-            <td>--</td><td>Real-Time</td>
-            <td><span class="status-pill ${statusLevel}">${statusLabel}</span></td>
+            <td>${time}</td><td>Node 1</td>
+            <td class="mono readings">${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moist, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
+            <td>Real-Time</td>
+            <td><span class="status-pill ${statusLevel}">Status</span></td>
           </tr>`;
           
-          // Insert the new row at the top
           feedBody.insertAdjacentHTML('afterbegin', rowHtml);
-          
-          // Keep only the last 8 rows so the table doesn't grow forever
           const rows = feedBody.querySelectorAll('tr');
           for(let i = 8; i < rows.length; i++) rows[i].remove();
         }
       }
     }
-
-    // Fetch Alerts (assuming you have your fetchAlerts function or logic here)
-    const alertResponse = await fetch(`${API_BASE_URL}/alerts`);
-    const alertResult = await alertResponse.json();
-
   } catch (error) {
-    console.error('❌ Error fetching live data from Render backend:', error);
+    console.error('❌ Error fetching live data:', error);
   }
 
-  // Force the currently visible chart to redraw with the new Firebase data
   renderChart(currentChart);
-  
-  // Re-poll every 10 seconds
   setTimeout(fieldTick, 10000); 
 }
 
 // 3. INITIALIZE DASHBOARD
 // ==========================================
+// 3. INITIALIZE DASHBOARD
+// ==========================================
 function initDashboard() {
   // Fetch immediately on load
-  fetchLatestTelemetry();
+  fieldTick(); // <-- THIS STARTS YOUR BULLETPROOF NPK LOOP
   fetchAlerts();
 
-  // Poll backend every 10 seconds for real-time updates
-  setInterval(fetchLatestTelemetry, 10000);
+  // Poll alerts every 10 seconds (fieldTick already loops itself)
   setInterval(fetchAlerts, 10000);
 }
+
+// Run when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initDashboard);
 
 // Run when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', initDashboard);
