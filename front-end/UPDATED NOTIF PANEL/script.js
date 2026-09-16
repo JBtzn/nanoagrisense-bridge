@@ -769,47 +769,83 @@ async function fetchAlerts() {
 
 async function fieldTick() {
   try {
-    const response = await fetch(`${API_BASE_URL}/telemetry/latest?=${Date.now()}`);
+    // 1. Fetch fresh telemetry from Firebase
+    const response = await fetch(`${API_BASE_URL}/telemetry/latest?t=${Date.now()}`);
     const result = await response.json();
 
     if (result.success && result.data) {
       const node1Data = result.data.NODE_001;
-      const node2Data = result.data.NODE_002;
 
-      // Update Node 1 (Mushroom)
+      // UPDATE NODE 1 (Mushroom)
       if (node1Data) {
-        updateSensorReadings({
-          soilMoisture: Number(node1Data.moisture ?? node1Data.soilMoisture),
-          soilTemp: Number(node1Data.temperature ?? node1Data.soilTemp),
-          ec: node1Data.ec !== undefined ? Number(node1Data.ec) : undefined,
-          ph: Number(node1Data.pH ?? node1Data.ph),
-          co2: node1Data.co2 !== undefined ? Number(node1Data.co2) : undefined,
-          // Extract NPK whether sent as an object or individual n, p, k properties
-          npk: node1Data.npk || (node1Data.n !== undefined ? { 
-            n: Number(node1Data.n), 
-            p: Number(node1Data.p), 
-            k: Number(node1Data.k) 
-          } : undefined)
-        }, '');
-      }
+        // Extract values safely, defaulting to 0 if something is missing
+        const moisture = Number(node1Data.moisture || 0);
+        const temp = Number(node1Data.temperature || 0);
+        const ec = node1Data.ec !== undefined ? Number(node1Data.ec) : 0;
+        const ph = Number(node1Data.pH || 0);
+        
+        // Extract NPK safely from the Firebase map
+        const n = node1Data.npk ? Number(node1Data.npk.n || 0) : 0;
+        const p = node1Data.npk ? Number(node1Data.npk.p || 0) : 0;
+        const k = node1Data.npk ? Number(node1Data.npk.k || 0) : 0;
 
-      // Update Node 2 (Nanofertilizer)
-      if (node2Data) {
+        // -----------------------------------------------------
+        // A. UPDATE KPI CARDS
+        // -----------------------------------------------------
         updateSensorReadings({
-          soilMoisture: Number(node2Data.moisture ?? node2Data.soilMoisture),
-          soilTemp: Number(node2Data.temperature ?? node2Data.soilTemp),
-          ec: node2Data.ec !== undefined ? Number(node2Data.ec) : undefined,
-          ph: Number(node2Data.pH ?? node2Data.ph),
-          co2: node2Data.co2 !== undefined ? Number(node2Data.co2) : undefined,
-          npk: node2Data.npk || (node2Data.n !== undefined ? { 
-            n: Number(node2Data.n), 
-            p: Number(node2Data.p), 
-            k: Number(node2Data.k) 
-          } : undefined)
-        }, 'Node2');
+          soilMoisture: moisture,
+          soilTemp: temp,
+          ec: ec,
+          ph: ph,
+          npk: { n, p, k }
+        }, ''); // The empty string '' targets Node 1's HTML IDs
+
+        // -----------------------------------------------------
+        // B. UPDATE CHART CAROUSEL DATA
+        // -----------------------------------------------------
+        // Shift old data out the left side, push new data in the right side
+        chartData.moisture.shift(); chartData.moisture.push(moisture);
+        chartData.temp.shift(); chartData.temp.push(temp);
+        chartData.ec.shift(); chartData.ec.push(ec);
+        chartData.ph.shift(); chartData.ph.push(ph);
+        
+        // Update NPK Chart Bars specifically for Node 1
+        chartData.npkNodes[0].N = n;
+        chartData.npkNodes[0].P = p;
+        chartData.npkNodes[0].K = k;
+
+        // -----------------------------------------------------
+        // C. UPDATE LIVE FEED TABLE
+        // -----------------------------------------------------
+        const feedBody = document.getElementById('feedTableBody');
+        if (feedBody) {
+          const now = new Date();
+          const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+          const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          
+          // Calculate an overall status based on EC (salinity)
+          const statusLabel = ec > 2.5 ? 'Alert' : (ec > 2.0 ? 'Watch' : 'Normal');
+          const statusLevel = ec > 2.5 ? 'alert' : (ec > 2.0 ? 'watch' : 'ok');
+          const totalNPK = n + p + k;
+
+          const rowHtml = `<tr>
+            <td>${time}</td><td>${date}</td><td>Node 1 (Mushroom)</td>
+            <td class="mono readings">${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moisture, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
+            <td>--</td><td>Real-Time</td>
+            <td><span class="status-pill ${statusLevel}">${statusLabel}</span></td>
+          </tr>`;
+          
+          // Insert the new row at the top
+          feedBody.insertAdjacentHTML('afterbegin', rowHtml);
+          
+          // Keep only the last 8 rows so the table doesn't grow forever
+          const rows = feedBody.querySelectorAll('tr');
+          for(let i = 8; i < rows.length; i++) rows[i].remove();
+        }
       }
     }
 
+    // Fetch Alerts (assuming you have your fetchAlerts function or logic here)
     const alertResponse = await fetch(`${API_BASE_URL}/alerts`);
     const alertResult = await alertResponse.json();
 
@@ -817,7 +853,10 @@ async function fieldTick() {
     console.error('❌ Error fetching live data from Render backend:', error);
   }
 
+  // Force the currently visible chart to redraw with the new Firebase data
   renderChart(currentChart);
+  
+  // Re-poll every 10 seconds
   setTimeout(fieldTick, 10000); 
 }
 
