@@ -22,6 +22,9 @@
     <a href="irrigation.html" class="nav-expand" id="navIrrigation" data-short="Irrigation" data-full="Irrigation System and Nutrient Control Center">Irrigation</a>
     <a href="#">Settings</a>
     <a href="#" id="logoutBtn" class="logout-link">Logout</a>
+    <button id="enable-notifications-btn" style="padding: 10px 15px; background: #2e7d32; color: #ffffff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+  🔔 Enable Real-Time Push Notifications
+</button>
   </nav>
 
   <div class="notif-wrap">
@@ -391,6 +394,27 @@
 
 <script src="script.js"></script>
 <script src="auth.js" type="module"></script>
+<script type="module">
+  // Import helper functions from your local notifications.js
+  import { requestNotificationPermission, listenForForegroundMessages } from './notifications.js';
+
+  // 1. Trigger permission request when button is clicked
+  const btn = document.getElementById('enable-notifications-btn');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const token = await requestNotificationPermission();
+      if (token) {
+        alert('Push notifications enabled successfully!');
+      }
+    });
+  }
+
+  // 2. Listen for alerts while tab is active
+  listenForForegroundMessages((payload) => {
+    alert(`🚨 ${payload.notification.title}\n${payload.notification.body}`);
+  });
+</script>
+
 
 </body>
 </html>

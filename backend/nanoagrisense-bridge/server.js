@@ -46,6 +46,22 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
+async function sendPushNotification(title, body, nodeId) {
+  const message = {
+    notification: {
+      title: title,
+      body: body
+    },
+    topic: 'alerts' // Broadcasts to all devices subscribed to the 'alerts' topic
+  };
+
+  try {
+    const response = await getMessaging().send(message);
+    console.log('📱 FCM Push Notification dispatched successfully:', response);
+  } catch (error) {
+    console.error('❌ Error sending FCM notification:', error);
+  }
+}
 // ==========================================
 // TELEMETRY THRESHOLD CHECK HELPER
 // ==========================================
@@ -57,47 +73,66 @@ async function checkTelemetryThresholds(nodeId, payload) {
     // 1. Soil Moisture Check (< 40.0%) - Sugeno Lower Limit
     if (moisture !== undefined && moisture < 40.0) {
       const alertId = `ALT_MOIST_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const title = '🚨 Critical Soil Moisture Alert';
+      const msg = `Critical: Soil moisture has dropped below Sugeno lower limit (${moisture}% < 40.0%) on Node ${nodeId}`;
+
       await alertsCollection.doc(alertId).set({
         alert_id: alertId,
         node_id: nodeId,
         type: 'CRITICAL',
         parameter: 'moisture',
         value: moisture,
-        alert_message: `Critical: Soil moisture has dropped below Sugeno lower limit (${moisture}% < 40.0%) on Node ${nodeId}`,
+        alert_message: msg,
         is_resolved: false,
         timestamp: FieldValue.serverTimestamp()
       });
       console.log(`⚠️ CRITICAL Alert generated for Node ${nodeId}: Moisture is low (${moisture}%)`);
+
+      // ADD THIS LINE: Dispatch FCM Push Notification
+      await sendPushNotification(title, msg, nodeId);
     }
 
     // 2. Soil pH Check (< 5.5 Acidic or > 7.0 Alkaline)
     if (pH !== undefined) {
       if (pH < 5.5) {
         const alertId = `ALT_PH_LOW_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        const title = '⚠️ Acidic Soil Warning';
+        const msg = `Acidic Soil Warning: Soil pH is too low (${pH} < 5.5) on Node ${nodeId}. Crops require buffering.`;
+
         await alertsCollection.doc(alertId).set({
           alert_id: alertId,
           node_id: nodeId,
           type: 'WARNING',
           parameter: 'pH',
           value: pH,
-          alert_message: `Acidic Soil Warning: Soil pH is too low (${pH} < 5.5) on Node ${nodeId}. Crops require buffering.`,
+          alert_message: msg,
           is_resolved: false,
           timestamp: FieldValue.serverTimestamp()
         });
         console.log(`⚠️ WARNING Alert generated for Node ${nodeId}: Low pH (${pH})`);
+
+        // ADD THIS LINE: Dispatch FCM Push Notification
+        await sendPushNotification(title, msg, nodeId);
+
       } else if (pH > 7.0) {
         const alertId = `ALT_PH_HIGH_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        const title = '⚠️ Alkaline Soil Warning';
+        const msg = `Alkaline Soil Warning: Soil pH is too high (${pH} > 7.0) on Node ${nodeId}`;
+
         await alertsCollection.doc(alertId).set({
           alert_id: alertId,
           node_id: nodeId,
           type: 'WARNING',
           parameter: 'pH',
           value: pH,
-          alert_message: `Alkaline Soil Warning: Soil pH is too high (${pH} > 7.0) on Node ${nodeId}`,
+          alert_message: msg,
           is_resolved: false,
           timestamp: FieldValue.serverTimestamp()
         });
         console.log(`⚠️ WARNING Alert generated for Node ${nodeId}: High pH (${pH})`);
+
+        // ADD THIS LINE: Dispatch FCM Push Notification
+        await sendPushNotification(title, msg, nodeId);
       }
     }
   } catch (error) {
