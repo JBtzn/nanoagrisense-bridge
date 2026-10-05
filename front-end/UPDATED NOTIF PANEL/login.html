@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NanoAgriSense — Operator Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-layout">
+
+  <div class="panel login-panel">
+    <div class="brand login-brand">
+      <img src="logo.png" alt="NanoAgriSense logo" class="brand-mark">
+      NanoAgriSense
+    </div>
+    
+    <h1 class="greeting-title">System Access</h1>
+    <p class="greeting-body" id="instructionText">Enter your authorized phone number to continue.</p>
+
+    <form id="phoneAuthForm" class="login-form">
+      
+      <!-- Step 1: Phone Number -->
+      <div class="input-group" id="phoneGroup">
+        <label for="phoneNumber">Phone Number (with Country Code)</label>
+        <input type="tel" id="phoneNumber" required placeholder="+639123456789">
+      </div>
+      
+      <!-- Step 2: Verification Code (Hidden initially) -->
+      <div class="input-group" id="codeGroup" style="display: none;">
+        <label for="otpCode">6-Digit Verification Code</label>
+        <input type="text" id="otpCode" placeholder="123456" maxlength="6">
+      </div>
+
+      <p id="errorMessage" class="error-text" style="display: none;"></p>
+
+      <!-- Required by Firebase Phone Auth -->
+      <div id="recaptcha-container"></div>
+
+      <button type="submit" class="btn-primary" id="authBtn">Send Code</button>
+    </form>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

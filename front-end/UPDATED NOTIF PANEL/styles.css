@@ -277,6 +277,16 @@ nav a{
 nav a.active{ background: var(--leaf); color: #fff; }
 nav a:not(.active):hover{ background: var(--leaf-light); }
 
+/* Logout button specific styling */
+nav a.logout-link {
+  color: var(--crimson);
+  margin-left: auto; /* Pushes the logout button to the far right if there is space */
+}
+
+nav a.logout-link:hover {
+  background: var(--crimson-track);
+  color: var(--crimson);
+}
 /* Nav item that reveals its full name on hover (Irrigation System and Nutrient Control Center) */
 nav a.nav-expand{
   display:inline-block;
