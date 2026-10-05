@@ -24,7 +24,7 @@ export const requestNotificationPermission = async () => {
 
       // Fetch FCM Registration Token
       const currentToken = await getToken(messaging, {
-        vapidKey: 'YOUR_VAPID_KEY_HERE' // Paste your VAPID key here
+        vapidKey: 'BKFevpyfKw50sj17qvCT65n1qa2yo9PUYZicFf_23VB58zcfFmwY--MOaLcLzV7mVG3sEl9Q_PYHY_GxJxxa9qs' // Paste your VAPID key here
       });
 
       if (currentToken) {
