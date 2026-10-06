@@ -22,9 +22,6 @@
     <a href="irrigation.html" class="nav-expand" id="navIrrigation" data-short="Irrigation" data-full="Irrigation System and Nutrient Control Center">Irrigation</a>
     <a href="#">Settings</a>
     <a href="#" id="logoutBtn" class="logout-link">Logout</a>
-    <button id="enable-notifications-btn" style="padding: 10px 15px; background: #2e7d32; color: #ffffff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-  🔔 Enable Real-Time Push Notifications
-</button>
   </nav>
 
   <div class="notif-wrap">
@@ -387,34 +384,165 @@
       </div>
     </div>
 
+    <!-- HISTORICAL TELEMETRY & EXPORT PANEL -->
+    <div class="node-panel">
+      <h3 class="node-title">Historical Telemetry & Evaluator Export</h3>
+
+      <div class="table-wrap" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Controls Grid -->
+        <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+          
+          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 160px;">
+            <label for="start-date-input" style="font-size: 0.85rem; font-weight: 700; color: var(--ink);">Start Date</label>
+            <input type="date" id="start-date-input" style="padding: 10px 14px; border: 2px solid var(--ink); border-radius: var(--radius-md); font-family: 'Inter', sans-serif; outline: none; background: #fffdf3;">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 160px;">
+            <label for="end-date-input" style="font-size: 0.85rem; font-weight: 700; color: var(--ink);">End Date</label>
+            <input type="date" id="end-date-input" style="padding: 10px 14px; border: 2px solid var(--ink); border-radius: var(--radius-md); font-family: 'Inter', sans-serif; outline: none; background: #fffdf3;">
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: auto;">
+            <button id="filter-history-btn" style="background: var(--teal); color: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 12px 20px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.12s ease;">
+              🔍 Filter Logs
+            </button>
+            <button id="export-csv-btn" style="background: var(--leaf); color: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 12px 20px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.12s ease;">
+              📥 Export CSV
+            </button>
+          </div>
+
+        </div>
+
+        <p id="export-status" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--crimson);"></p>
+
+        <!-- Data Table -->
+        <div class="table-scroll" style="border: 2px solid var(--ink); border-radius: var(--radius-md);">
+          <table id="telemetry-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Node ID</th>
+                <th>Moisture (%)</th>
+                <th>pH</th>
+                <th>Temp (°C)</th>
+                <th>NPK (N/P/K)</th>
+              </tr>
+            </thead>
+            <tbody id="telemetry-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 24px; font-style: italic; color: var(--ink-soft);">Select a date range and click Filter Logs.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </main>
 
 <footer>NanoAgriSense · Field readings update every 15 minutes</footer>
 
-<script src="script.js"></script>
-<script src="auth.js" type="module"></script>
+<script type="module" src="auth.js"></script>
+<script type="module" src="script.js"></script>
 <script type="module">
-  // Import helper functions from your local notifications.js
-  import { requestNotificationPermission, listenForForegroundMessages } from './src/notifications.js';
+  const RENDER_BASE_URL = 'https://nanoagrisense-bridge.onrender.com';
+  let fetchedTelemetryData = []; // Cache query results for CSV export
 
-  // 1. Trigger permission request when button is clicked
-  const btn = document.getElementById('enable-notifications-btn');
-  if (btn) {
-    btn.addEventListener('click', async () => {
-      const token = await requestNotificationPermission();
-      if (token) {
-        alert('Push notifications enabled successfully!');
+  const startDateInput = document.getElementById('start-date-input');
+  const endDateInput = document.getElementById('end-date-input');
+  const filterBtn = document.getElementById('filter-history-btn');
+  const exportBtn = document.getElementById('export-csv-btn');
+  const statusEl = document.getElementById('export-status');
+  const tableBody = document.getElementById('telemetry-table-body');
+
+  // Set default date picker values (Last 7 days)
+  const today = new Date();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  endDateInput.value = today.toISOString().split('T')[0];
+  startDateInput.value = sevenDaysAgo.toISOString().split('T')[0];
+
+  // 1. Fetch & Filter Telemetry Records
+  async function fetchHistoricalTelemetry() {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+
+    statusEl.innerText = 'Fetching telemetry logs...';
+    tableBody.innerHTML = '<tr><td colspan="6" style="padding: 10px; text-align: center;">Loading...</td></tr>';
+
+    try {
+      const res = await fetch(`${RENDER_BASE_URL}/api/telemetry/history?start_date=${startDate}&end_date=${endDate}`);
+      const result = await res.json();
+
+      if (result.success && result.data.length > 0) {
+        fetchedTelemetryData = result.data;
+        statusEl.innerText = ` Found ${result.count} telemetry records.`;
+
+        // Render table rows
+        tableBody.innerHTML = result.data.map(item => `
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 8px;">${item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A'}</td>
+            <td style="padding: 8px;">${item.node_id}</td>
+            <td style="padding: 8px;">${item.moisture ?? '--'}%</td>
+            <td style="padding: 8px;">${item.pH ?? '--'}</td>
+            <td style="padding: 8px;">${item.temperature ?? '--'}°C</td>
+            <td style="padding: 8px;">${item.nitrogen ?? 0}/${item.phosphorus ?? 0}/${item.potassium ?? 0}</td>
+          </tr>
+        `).join('');
+      } else {
+        fetchedTelemetryData = [];
+        statusEl.innerText = '⚠️ No telemetry records found for selected date range.';
+        tableBody.innerHTML = '<tr><td colspan="6" style="padding: 10px; text-align: center;">No records found.</td></tr>';
       }
-    });
+    } catch (err) {
+      console.error('Error fetching telemetry history:', err);
+      statusEl.innerText = '❌ Error fetching telemetry logs. Check console.';
+    }
   }
 
-  // 2. Listen for alerts while tab is active
-  listenForForegroundMessages((payload) => {
-    alert(`🚨 ${payload.notification.title}\n${payload.notification.body}`);
-  });
+  // 2. Export Filtered Records to CSV Spreadsheet
+  function exportTelemetryToCSV() {
+    if (!fetchedTelemetryData || fetchedTelemetryData.length === 0) {
+      alert('No telemetry data available to export. Please filter logs first!');
+      return;
+    }
+
+    const headers = ['Timestamp', 'Node ID', 'Soil Moisture (%)', 'Soil pH', 'Temperature (°C)', 'Nitrogen (mg/kg)', 'Phosphorus (mg/kg)', 'Potassium (mg/kg)', 'CO2 (ppm)'];
+    
+    const csvRows = [
+      headers.join(','),
+      ...fetchedTelemetryData.map(row => [
+        `"${row.timestamp || ''}"`,
+        `"${row.node_id || ''}"`,
+        row.moisture ?? '',
+        row.pH ?? '',
+        row.temperature ?? '',
+        row.nitrogen ?? '',
+        row.phosphorus ?? '',
+        row.potassium ?? '',
+        row.co2 ?? ''
+      ].join(','))
+    ];
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+
+    // Create virtual download link
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `nanoagrisense_telemetry_${startDateInput.value}_to_${endDateInput.value}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    statusEl.innerText = '✅ Telemetry CSV spreadsheet downloaded successfully!';
+  }
+
+  // Event Listeners
+  if (filterBtn) filterBtn.addEventListener('click', fetchHistoricalTelemetry);
+  if (exportBtn) exportBtn.addEventListener('click', exportTelemetryToCSV);
 </script>
-
-
 </body>
 </html>

@@ -144,6 +144,7 @@ async function checkTelemetryThresholds(nodeId, payload) {
 // API ROUTES
 // ==========================================
 
+
 // 1. POST /api/telemetry - Ingest Modbus/RS485 sensor data from field nodes
 app.post('/api/telemetry', async (req, res) => {
   try {
@@ -190,6 +191,54 @@ app.get('/api/telemetry/latest', async (req, res) => {
     return res.status(200).json({ success: true, data });
   } catch (error) {
     console.error('❌ GET Latest Telemetry Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/telemetry/history - Query historical telemetry records by date range (Sprint 4.1)
+app.get('/api/telemetry/history', async (req, res) => {
+  try {
+    const { start_date, end_date, node_id } = req.query;
+    let query = db.collection('telemetry');
+
+    if (node_id) {
+      query = query.where('node_id', '==', node_id);
+    }
+
+    if (start_date) {
+      const startTimestamp = new Date(start_date);
+      query = query.where('timestamp', '>=', startTimestamp);
+    }
+
+    if (end_date) {
+      // Set end time to the end of that day (23:59:59.999)
+      const endTimestamp = new Date(end_date);
+      endTimestamp.setHours(23, 59, 59, 999);
+      query = query.where('timestamp', '<=', endTimestamp);
+    }
+
+    const snapshot = await query.orderBy('timestamp', 'desc').limit(500).get();
+
+    const history = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      history.push({
+        id: doc.id,
+        node_id: data.node_id,
+        moisture: data.moisture ?? null,
+        pH: data.pH ?? null,
+        temperature: data.temperature ?? null,
+        nitrogen: data.nitrogen ?? null,
+        phosphorus: data.phosphorus ?? null,
+        potassium: data.potassium ?? null,
+        co2: data.co2 ?? null,
+        timestamp: data.timestamp ? data.timestamp.toDate().toISOString() : null
+      });
+    });
+
+    return res.status(200).json({ success: true, count: history.length, data: history });
+  } catch (error) {
+    console.error('❌ GET Telemetry History Error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
