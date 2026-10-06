@@ -34,9 +34,14 @@
     </button>
 
     <div class="notif-panel" id="notifPanel" role="menu" aria-hidden="true">
-      <div class="notif-panel-head">
-        <h3>Notifications</h3>
-        <span class="notif-panel-sub">Field sensor activity</span>
+      <div class="notif-panel-head" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="margin: 0;">Notifications</h3>
+          <span class="notif-panel-sub">Field sensor activity</span>
+        </div>
+        <button id="enablePushBtn" style="background: var(--leaf); color: #fff; border: 2px solid var(--ink); border-radius: 6px; padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
+          Enable Push
+        </button>
       </div>
       <div class="notif-scroll" id="notifScroll">
 
