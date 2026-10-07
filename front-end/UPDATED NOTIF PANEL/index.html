@@ -550,39 +550,94 @@
   if (exportBtn) exportBtn.addEventListener('click', exportTelemetryToCSV);
 </script>
 <script type="module">
-  // Ensure the relative path to notifications.js matches your folder structure (e.g. './notifications.js' or './src/notifications.js')
-  import { requestNotificationPermission, listenForForegroundMessages } from './src/notifications.js';
+  const RENDER_BASE_URL = 'https://nanoagrisense-bridge.onrender.com';
+  const notifPanel = document.getElementById('notifPanel');
+  const notifContainer = notifPanel ? notifPanel.querySelector('.notif-list') || notifPanel : null;
 
-  const pushBtn = document.getElementById('enablePushBtn');
+  // 1. Helper to format timestamps into clean readable strings
+  function formatTimestamp(ts) {
+    if (!ts) return 'Just now';
+    
+    // Handles Firestore Timestamp objects, ISO strings, or millisecond numbers
+    const date = ts._seconds ? new Date(ts._seconds * 1000) : new Date(ts);
+    if (isNaN(date.getTime())) return 'Recently';
 
-  if (pushBtn) {
-    pushBtn.addEventListener('click', async () => {
-      pushBtn.disabled = true;
-      pushBtn.innerText = 'Connecting...';
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
 
-      try {
-        const token = await requestNotificationPermission();
-        if (token) {
-          pushBtn.innerText = 'Push Active';
-          pushBtn.style.background = '#2e7d32';
-          alert('🔔 Real-Time Push Notifications enabled successfully!');
-        } else {
-          pushBtn.disabled = false;
-          pushBtn.innerText = 'Enable Push';
-          alert('⚠️ Permission was denied or token generation failed. Check F12 console.');
-        }
-      } catch (err) {
-        pushBtn.disabled = false;
-        pushBtn.innerText = 'Enable Push';
-        alert(`❌ Error enabling push: ${err.message}`);
-      }
-    });
+    // Return "10:15 AM" if today, or "Oct 7, 10:15 AM" if earlier
+    return isToday 
+      ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   }
 
-  // Handle incoming alerts while the dashboard tab is open
-  listenForForegroundMessages((payload) => {
-    alert(`🚨 ${payload.notification?.title || 'System Alert'}\n${payload.notification?.body || ''}`);
-  });
+  // 2. Fetch and Render Alerts
+  async function loadNotifications() {
+    try {
+      const res = await fetch(`${RENDER_BASE_URL}/api/alerts?limit=15`);
+      const data = await res.json();
+
+      if (!data.success || !data.alerts || data.alerts.length === 0) {
+        if (notifContainer) {
+          notifContainer.innerHTML = `
+            <div style="padding: 15px; text-align: center; color: #888; font-size: 0.85rem;">
+              🌱 All systems normal. No active alerts.
+            </div>`;
+        }
+        return;
+      }
+
+      // Render notifications with severity badge, message, and timestamp
+      const htmlContent = data.alerts.map(alert => {
+        const isCritical = alert.type === 'CRITICAL';
+        const badgeColor = isCritical ? '#d32f2f' : '#ed6c02';
+        const badgeBg = isCritical ? '#ffebee' : '#fff4e5';
+        const badgeIcon = isCritical ? '🚨' : '⚠️';
+        const formattedTime = formatTimestamp(alert.timestamp);
+
+        return `
+          <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 4px; background: ${alert.is_resolved ? '#ffffff' : '#f9fbe7'};">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; display: inline-flex; align-items: center; gap: 4px;">
+                ${badgeIcon} ${alert.type || 'ALERT'}
+              </span>
+              <span style="font-size: 0.72rem; color: #777; font-weight: 500;">
+                🕒 ${formattedTime}
+              </span>
+            </div>
+            
+            <div style="font-size: 0.82rem; color: #222; font-weight: ${alert.is_resolved ? '400' : '700'}; margin-top: 2px; line-height: 1.3;">
+              ${alert.alert_message || alert.message || 'Sensor threshold exceeded.'}
+            </div>
+
+            <div style="font-size: 0.72rem; color: #555; margin-top: 2px;">
+              Node: <strong>${alert.node_id || 'NODE-001'}</strong> | Value: <strong>${alert.value ?? '--'}</strong>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (notifContainer) {
+        notifContainer.innerHTML = htmlContent;
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  }
+
+  // 3. Initial Load on Page Startup (Prevents delay when clicking the bell)
+  loadNotifications();
+
+  // 4. Background Sync Every 10 Seconds (Keeps notifications fresh in real time)
+  setInterval(loadNotifications, 10000);
+
+  // 5. Instantly refresh whenever user opens the panel
+  const notifToggleBtn = document.getElementById('notifToggleBtn') || document.querySelector('.notif-btn');
+  if (notifToggleBtn) {
+    notifToggleBtn.addEventListener('click', () => {
+      loadNotifications(); // Fresh fetch instantly when clicked
+    });
+  }
 </script>
 </body>
 </html>
