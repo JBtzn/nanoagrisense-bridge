@@ -549,5 +549,40 @@
   if (filterBtn) filterBtn.addEventListener('click', fetchHistoricalTelemetry);
   if (exportBtn) exportBtn.addEventListener('click', exportTelemetryToCSV);
 </script>
+<script type="module">
+  // Ensure the relative path to notifications.js matches your folder structure (e.g. './notifications.js' or './src/notifications.js')
+  import { requestNotificationPermission, listenForForegroundMessages } from './notifications.js';
+
+  const pushBtn = document.getElementById('enablePushBtn');
+
+  if (pushBtn) {
+    pushBtn.addEventListener('click', async () => {
+      pushBtn.disabled = true;
+      pushBtn.innerText = 'Connecting...';
+
+      try {
+        const token = await requestNotificationPermission();
+        if (token) {
+          pushBtn.innerText = 'Push Active';
+          pushBtn.style.background = '#2e7d32';
+          alert('🔔 Real-Time Push Notifications enabled successfully!');
+        } else {
+          pushBtn.disabled = false;
+          pushBtn.innerText = 'Enable Push';
+          alert('⚠️ Permission was denied or token generation failed. Check F12 console.');
+        }
+      } catch (err) {
+        pushBtn.disabled = false;
+        pushBtn.innerText = 'Enable Push';
+        alert(`❌ Error enabling push: ${err.message}`);
+      }
+    });
+  }
+
+  // Handle incoming alerts while the dashboard tab is open
+  listenForForegroundMessages((payload) => {
+    alert(`🚨 ${payload.notification?.title || 'System Alert'}\n${payload.notification?.body || ''}`);
+  });
+</script>
 </body>
 </html>
