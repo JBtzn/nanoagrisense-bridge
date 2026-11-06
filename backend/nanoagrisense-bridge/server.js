@@ -1,25 +1,62 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
+const { getMessaging } = require('firebase-admin/messaging');
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('./serviceAccountKey.json');
+let credential;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    const parsedKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    credential = cert(parsedKey);
+  } catch (err) {
+    console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT env var:', err);
+  }
+} else {
+  const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+  if (fs.existsSync(serviceAccountPath)) {
+    const serviceAccount = require(serviceAccountPath);
+    credential = cert(serviceAccount);
+  }
+}
 
 if (getApps().length === 0) {
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
+  if (credential) {
+    initializeApp({ credential });
+  } else {
+    // Falls back to Application Default Credentials
+    initializeApp();
+  }
 }
 
 const db = getFirestore();
 const app = express();
 
-// Middleware
+// Middleware: Flexible CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['https://nanoagrisense-bridge.vercel.app'];
+
 const corsOptions = {
-  // Be sure to change this URL to your actual Vercel URL once it finishes deploying!
-  origin: 'https://nanoagrisense-bridge.vercel.app', 
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, Postman, hardware gateways)
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+      /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
