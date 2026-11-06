@@ -811,13 +811,13 @@ async function fieldTick() {
           const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
           const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const statusLevel = ec > 2.5 ? 'alert' : (ec > 2.0 ? 'watch' : 'ok');
-          const totalNPK = n + p + k;
+          const NPK = `${n} mg/kg, ${p} mg/kg, ${k} mg/kg`;
 
           const rowHtml = `<tr>
             <td>${time}</td>
             <td>${date}</td>
             <td>Node 1</td>
-            <td class="mono readings">${co2 !== undefined ? Math.round(co2) + ' ppm CO2, ' : ''}${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moist, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
+            <td class="mono readings">${co2 !== undefined ? Math.round(co2) + ' ppm CO2, ' : ''}${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moist, ${NPK}, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
             <td>Optimal</td> <!-- Or map real battery data here -->
             <td>Real-Time</td>
             <td><span class="status-pill ${statusLevel}">Status</span></td>
