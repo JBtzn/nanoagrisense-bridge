@@ -763,25 +763,36 @@ async function fieldTick() {
         const temp = Number(node1Data.temperature || 0);
         const ec = node1Data.ec !== undefined ? Number(node1Data.ec) : 0;
         const ph = Number(node1Data.pH || 0);
-        
-        // 👉 2. FOOLPROOF NPK EXTRACTION
+
+        // 👉 2. FOOLPROOF CO2 EXTRACTION — handles co2, CO2, co2_ppm field names
+        const co2Raw = node1Data.co2 ?? node1Data.CO2 ?? node1Data.co2_ppm ?? null;
+        const co2 = co2Raw !== null ? Number(co2Raw) : undefined;
+        console.log(`🌬️ CO2 raw: ${co2Raw} → parsed: ${co2}`);
+
+        // 👉 3. FOOLPROOF NPK EXTRACTION
         let n = 0, p = 0, k = 0;
         if (node1Data.npk) {
           n = Number(node1Data.npk.n) || 0;
           p = Number(node1Data.npk.p) || 0;
           k = Number(node1Data.npk.k) || 0;
         }
-        
+
         console.log(`🧪 Parsed NPK -> N: ${n}, P: ${p}, K: ${k}`);
 
         // A. UPDATE KPI CARDS
-        updateSensorReadings({
+        const kpiPayload = {
           soilMoisture: moisture,
           soilTemp: temp,
           ec: ec,
           ph: ph,
           npk: { n, p, k }
-        }, ''); 
+        };
+        if (co2 !== undefined) {
+          kpiPayload.co2 = co2;
+          kpiPayload.co2Avg = co2;  // use live value as running avg until history is tracked
+          kpiPayload.co2Status = co2 > 950 ? { label: 'Watch', level: 'watch' } : { label: 'Normal', level: 'ok' };
+        }
+        updateSensorReadings(kpiPayload, ''); 
 
         // B. UPDATE CHART CAROUSEL DATA
         chartData.moisture.shift(); chartData.moisture.push(moisture);
@@ -806,7 +817,7 @@ async function fieldTick() {
             <td>${time}</td>
             <td>${date}</td>
             <td>Node 1</td>
-            <td class="mono readings">${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moist, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
+            <td class="mono readings">${co2 !== undefined ? Math.round(co2) + ' ppm CO2, ' : ''}${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moist, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
             <td>Optimal</td> <!-- Or map real battery data here -->
             <td>Real-Time</td>
             <td><span class="status-pill ${statusLevel}">Status</span></td>
