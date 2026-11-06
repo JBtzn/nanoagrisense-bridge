@@ -697,41 +697,47 @@ function nudgeChartsData(){
   });
 }
 
-// ==========================================
-// FETCH & DISPLAY ALERTS
-// ==========================================
+function parseAlertTime(ts){
+  if(!ts) return new Date();
+  if(typeof ts === 'object'){
+    const seconds = ts._seconds ?? ts.seconds;
+    if(typeof seconds === 'number') return new Date(seconds * 1000);
+  }
+  const date = new Date(ts);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function tierFromAlertType(type){
+  const t = String(type || '').toUpperCase();
+  if(t === 'CRITICAL') return 'critical';
+  if(t === 'WARNING') return 'warning';
+  return 'log';
+}
+
 async function fetchAlerts() {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts`);
+    const response = await fetch(`${API_BASE_URL}/alerts?limit=20`);
     const result = await response.json();
+    if(!result.success || !Array.isArray(result.alerts)) return;
 
-    if (result.success) {
-      const alerts = result.alerts;
-      
-      const criticalAlerts = alerts.filter(a => a.type === 'CRITICAL');
-      const warningAlerts = alerts.filter(a => a.type === 'WARNING');
+    const localOnly = notifications.filter(n => !n.apiId);
+    const fromApi = result.alerts.map(alert => {
+      const apiId = String(alert.alert_id || alert.id || `${alert.node_id}-${alert.parameter}-${alert.timestamp}`);
+      const existing = notifications.find(n => n.apiId === apiId);
+      return {
+        id: existing?.id ?? `api-${apiId}`,
+        apiId,
+        tier: tierFromAlertType(alert.type),
+        message: alert.alert_message || alert.message || 'Sensor threshold exceeded.',
+        time: parseAlertTime(alert.timestamp),
+        read: existing ? existing.read : (notifPanelOpen || Boolean(alert.is_resolved))
+      };
+    });
 
-      // Update Notification Badges
-      document.getElementById('notifBadge').innerText = alerts.length;
-      document.getElementById('critCount').innerText = criticalAlerts.length;
-      document.getElementById('warnCount').innerText = warningAlerts.length;
-
-      // Populate Critical Alerts List
-      const critList = document.getElementById('critList');
-      if (critList) {
-        critList.innerHTML = criticalAlerts.map(alert => 
-          `<div class="notif-item"><strong>Node: ${alert.node_id}</strong><br>${alert.alert_message}</div>`
-        ).join('') || '<p class="notif-empty">No critical alerts.</p>';
-      }
-
-      // Populate Warning Alerts List
-      const warnList = document.getElementById('warnList');
-      if (warnList) {
-        warnList.innerHTML = warningAlerts.map(alert => 
-          `<div class="notif-item"><strong>Node: ${alert.node_id}</strong><br>${alert.alert_message}</div>`
-        ).join('') || '<p class="notif-empty">No warnings.</p>';
-      }
-    }
+    notifications = [...fromApi, ...localOnly];
+    if(notifications.length > 40) notifications.length = 40;
+    renderNotifications();
+    renderBadge();
   } catch (error) {
     console.error('Error fetching alerts:', error);
   }
@@ -788,12 +794,16 @@ async function fieldTick() {
         if (feedBody) {
           const now = new Date();
           const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+          const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const statusLevel = ec > 2.5 ? 'alert' : (ec > 2.0 ? 'watch' : 'ok');
           const totalNPK = n + p + k;
 
           const rowHtml = `<tr>
-            <td>${time}</td><td>Node 1</td>
+            <td>${time}</td>
+            <td>${date}</td>
+            <td>Node 1</td>
             <td class="mono readings">${ph.toFixed(1)} pH, ${Math.round(moisture)}% Moist, ${Math.round(totalNPK)} ppm NPK, ${temp.toFixed(1)}°C, ${ec.toFixed(1)} mS/cm EC</td>
+            <td>Optimal</td> <!-- Or map real battery data here -->
             <td>Real-Time</td>
             <td><span class="status-pill ${statusLevel}">Status</span></td>
           </tr>`;
@@ -812,30 +822,12 @@ async function fieldTick() {
   setTimeout(fieldTick, 10000); 
 }
 
-// 3. INITIALIZE DASHBOARD
-// ==========================================
-// 3. INITIALIZE DASHBOARD
-// ==========================================
 function initDashboard() {
-  // Fetch immediately on load
-  fieldTick(); // <-- THIS STARTS YOUR BULLETPROOF NPK LOOP
+  fieldTick();
   fetchAlerts();
-
-  // Poll alerts every 10 seconds (fieldTick already loops itself)
   setInterval(fetchAlerts, 10000);
 }
 
-// Run when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', initDashboard);
-
-// Run when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', initDashboard);
-
-// Notification Panel Toggle Logic
-document.getElementById('notifBellBtn').addEventListener('click', () => {
-  const panel = document.getElementById('notifPanel');
-  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-});
 /* =========================================================
    FULLSCREEN TOGGLES — live feed table + chart panel
    ========================================================= */
@@ -960,18 +952,7 @@ function markAllNotificationsRead(){
   renderBadge();
 }
 
-// ---- Seed data so the panel demonstrates all three tiers on load ----
 function seedNotifications(){
-  const now = Date.now();
-  notifications = [
-    { id: notifIdSeed++, tier: 'critical', message: 'Node_002 (Nanofertilizer): EC breached 2.5 mS/cm — nutrient dosing failsafe engaged.', time: new Date(now - 2 * 3600 * 1000), read: false },
-    { id: notifIdSeed++, tier: 'critical', message: 'Node_001 (Mushroom): Soil temperature exceeded 35°C — cooling failsafe triggered.', time: new Date(now - 5 * 3600 * 1000), read: true },
-    { id: notifIdSeed++, tier: 'warning', message: 'Node_001 battery at 42% — switched to Power Save mode.', time: new Date(now - 46 * 60 * 1000), read: false },
-    { id: notifIdSeed++, tier: 'warning', message: 'Node_002: Soil pH trending acidic (5.8) — monitor before it drifts out of range.', time: new Date(now - 12 * 60 * 1000), read: false },
-    { id: notifIdSeed++, tier: 'log', message: 'Node_001 telemetry sync completed — all parameters nominal.', time: new Date(now - 3 * 60 * 1000), read: false },
-    { id: notifIdSeed++, tier: 'log', message: 'Automated irrigation cycle completed for Plot A.', time: new Date(now - 70 * 60 * 1000), read: true },
-    { id: notifIdSeed++, tier: 'log', message: 'Node_002 reconnected to gateway after brief signal drop.', time: new Date(now - 4 * 3600 * 1000), read: true }
-  ];
   renderNotifications();
   renderBadge();
 }
@@ -983,9 +964,11 @@ const notifPanel = document.getElementById('notifPanel');
 function openNotifPanel(){
   notifPanelOpen = true;
   notifPanel.classList.add('open');
+  notifPanel.style.display = '';
   notifPanel.setAttribute('aria-hidden', 'false');
   notifBellBtn.setAttribute('aria-expanded', 'true');
-  markAllNotificationsRead(); // badge fades out once the panel is opened and read
+  markAllNotificationsRead();
+  fetchAlerts();
 }
 
 function closeNotifPanel(){
@@ -1009,7 +992,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 seedNotifications();
-setInterval(updateNotifTimestamps, 30 * 1000); // keep "X minutes ago" fresh
+setInterval(updateNotifTimestamps, 30 * 1000);
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
 
 // ---- Edge-triggered hooks into the live field simulation ----
 // Fires a notification only on state *transitions*, not every tick,
