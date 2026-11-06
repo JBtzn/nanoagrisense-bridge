@@ -400,6 +400,27 @@ app.patch('/api/alerts/:alert_id/resolve', authenticateUser, async (req, res) =>
   }
 });
 
+// 7. POST /api/notifications/subscribe - Subscribe device FCM registration token to a topic
+app.post('/api/notifications/subscribe', async (req, res) => {
+  try {
+    const { token, topic = 'alerts' } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'FCM token is required.' });
+    }
+
+    const response = await getMessaging().subscribeToTopic([token], topic);
+    console.log(`📱 Subscribed device token to topic '${topic}':`, response);
+    return res.status(200).json({
+      success: true,
+      message: `Device successfully subscribed to '${topic}' alerts topic.`,
+      response
+    });
+  } catch (error) {
+    console.error('❌ Error subscribing token to topic:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Root Health Check Route
 app.get('/', (req, res) => {
   res.status(200).send('🌱 NanoAgriSense Bridge API is running.');

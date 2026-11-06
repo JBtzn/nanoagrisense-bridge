@@ -19,12 +19,31 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-  const notificationTitle = payload.notification?.title || '🚨 NanoAgriSense Alert';
+  const notificationTitle = payload.notification?.title || payload.data?.title || '🚨 NanoAgriSense Alert';
   const notificationOptions = {
-    body: payload.notification?.body || 'A sensor threshold breach was detected in the field.',
-    icon: '/logo192.png', // Optional icon path
-    badge: '/favicon.ico'
+    body: payload.notification?.body || payload.data?.body || 'A sensor threshold breach was detected in the field.',
+    icon: 'assets/logo.png',
+    badge: 'assets/logo.png',
+    data: payload.data || {}
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Focus or open dashboard when user clicks on push notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes('index.html') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('./index.html');
+      }
+    })
+  );
 });

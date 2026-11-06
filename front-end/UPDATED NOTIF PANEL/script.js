@@ -1,3 +1,5 @@
+import { requestNotificationPermission, listenForForegroundMessages } from './src/notifications.js';
+
 /* =========================================================
    SOIL PARAMETER CHART CAROUSEL
    Colors reused from styles.css palette:
@@ -5,7 +7,9 @@
    teal (sky) #1f7fa0 / crimson (terracotta) #a8472e / cream #f6f2da
    ========================================================= */
 
-const API_BASE_URL = 'https://nanoagrisense-bridge.onrender.com/api';
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : 'https://nanoagrisense-bridge.onrender.com/api';
 
 // Shared plot area — left margin reserved for y-axis value labels
 const PLOT_LEFT = 34, PLOT_RIGHT = 352, PX_TOP = 20, PX_BOTTOM = 180;
@@ -822,10 +826,67 @@ async function fieldTick() {
   setTimeout(fieldTick, 10000); 
 }
 
+function handleIncomingForegroundNotification(payload) {
+  const title = payload.notification?.title || payload.data?.title || '🚨 NanoAgriSense Alert';
+  const body = payload.notification?.body || payload.data?.body || 'Sensor threshold breach detected.';
+  const isCritical = title.toLowerCase().includes('critical') || body.toLowerCase().includes('critical');
+  addNotification(isCritical ? 'critical' : 'warning', `${title}: ${body}`);
+  fetchAlerts();
+}
+
+function setupPushNotifications() {
+  const enablePushBtn = document.getElementById('enablePushBtn');
+  if (!enablePushBtn) return;
+
+  if (!('Notification' in window)) {
+    enablePushBtn.textContent = 'Push Unsupported';
+    enablePushBtn.disabled = true;
+    return;
+  }
+
+  const updateBtnState = () => {
+    if (Notification.permission === 'granted') {
+      enablePushBtn.textContent = 'Push Active';
+      enablePushBtn.style.background = '#2f4f22';
+      enablePushBtn.style.cursor = 'default';
+      enablePushBtn.disabled = true;
+    } else if (Notification.permission === 'denied') {
+      enablePushBtn.textContent = 'Push Blocked';
+      enablePushBtn.style.opacity = '0.6';
+      enablePushBtn.style.cursor = 'not-allowed';
+      enablePushBtn.disabled = true;
+    } else {
+      enablePushBtn.textContent = 'Enable Push';
+      enablePushBtn.disabled = false;
+    }
+  };
+
+  updateBtnState();
+
+  if (Notification.permission === 'granted') {
+    requestNotificationPermission().catch(console.error);
+    listenForForegroundMessages(handleIncomingForegroundNotification);
+  }
+
+  enablePushBtn.addEventListener('click', async () => {
+    enablePushBtn.textContent = 'Enabling...';
+    enablePushBtn.disabled = true;
+    const token = await requestNotificationPermission();
+    if (token) {
+      updateBtnState();
+      addNotification('log', 'Push notifications enabled & subscribed to alerts topic.');
+      listenForForegroundMessages(handleIncomingForegroundNotification);
+    } else {
+      updateBtnState();
+    }
+  });
+}
+
 function initDashboard() {
   fieldTick();
   fetchAlerts();
   setInterval(fetchAlerts, 10000);
+  setupPushNotifications();
 }
 
 /* =========================================================
