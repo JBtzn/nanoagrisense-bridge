@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NanoAgriSense — Soil Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -33,13 +34,13 @@
       <span class="notif-badge" id="notifBadge">0</span>
     </button>
 
-    <div class="notif-panel" id="notifPanel" role="menu" aria-hidden="true">
-      <div class="notif-panel-head" style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="notif-panel" id="notifPanel" role="dialog" aria-label="Notifications" aria-hidden="true">
+      <div class="notif-panel-head notif-panel-head--flex">
         <div>
           <h3 style="margin: 0;">Notifications</h3>
           <span class="notif-panel-sub">Field sensor activity</span>
         </div>
-        <button id="enablePushBtn" style="background: var(--leaf); color: #fff; border: 2px solid var(--ink); border-radius: 6px; padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">
+        <button id="enablePushBtn" class="btn-push-enable" type="button">
           Enable Push
         </button>
       </div>
@@ -112,25 +113,25 @@
               <tbody id="feedTableBody">
                 <tr>
                   <td>14:32</td><td>Aug 11</td><td>Node 1 (Mushroom)</td>
-                  <td class="mono readings">400 ppm CO2, 6.5 pH, 45% Moisture, 120 ppm NPK, 28°C</td>
+                  <td class="mono readings">400 ppm CO₂, 6.5 pH, 45% Moisture, 120 ppm NPK, 28°C</td>
                   <td>85% (Optimal)</td><td>2 min (Real-Time)</td>
                   <td><span class="status-pill ok">Normal</span></td>
                 </tr>
                 <tr>
                   <td>14:32</td><td>Aug 11</td><td>Node 2 (Nanofertilizer)</td>
-                  <td class="mono readings">380 ppm CO2, 6.7 pH, 42% Moisture, 312 ppm NPK, 28.5°C</td>
+                  <td class="mono readings">380 ppm CO₂, 6.7 pH, 42% Moisture, 312 ppm NPK, 28.5°C</td>
                   <td>84% (Optimal)</td><td>2 min (Real-Time)</td>
                   <td><span class="status-pill watch">Watch</span></td>
                 </tr>
                 <tr>
                   <td>04:15</td><td>Aug 11</td><td>Node 1 (Mushroom)</td>
-                  <td class="mono readings">390 ppm CO2, 6.4 pH, 38% Moisture, 115 ppm NPK, 18.4°C</td>
+                  <td class="mono readings">390 ppm CO₂, 6.4 pH, 38% Moisture, 115 ppm NPK, 18.4°C</td>
                   <td>42% (Discharging)</td><td>15 min (Power Save)</td>
                   <td><span class="status-pill alert">Action</span></td>
                 </tr>
                 <tr>
                   <td>04:15</td><td>Aug 11</td><td>Node 2 (Nanofertilizer)</td>
-                  <td class="mono readings">375 ppm CO2, 6.6 pH, 40% Moisture, 290 ppm NPK, 18.6°C</td>
+                  <td class="mono readings">375 ppm CO₂, 6.6 pH, 40% Moisture, 290 ppm NPK, 18.6°C</td>
                   <td>43% (Discharging)</td><td>15 min (Power Save)</td>
                   <td><span class="status-pill ok">Normal</span></td>
                 </tr>
@@ -393,36 +394,38 @@
     <div class="node-panel">
       <h3 class="node-title">Historical Telemetry & Evaluator Export</h3>
 
-      <div class="table-wrap" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
-        
+      <div class="table-wrap history-panel">
+
         <!-- Controls Grid -->
-        <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-          
-          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 160px;">
-            <label for="start-date-input" style="font-size: 0.85rem; font-weight: 700; color: var(--ink);">Start Date</label>
-            <input type="date" id="start-date-input" style="padding: 10px 14px; border: 2px solid var(--ink); border-radius: var(--radius-md); font-family: 'Inter', sans-serif; outline: none; background: #fffdf3;">
+        <div class="history-controls">
+
+          <div class="history-field">
+            <label for="start-date-input" class="history-label">Start Date</label>
+            <input type="date" id="start-date-input" class="history-input">
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 160px;">
-            <label for="end-date-input" style="font-size: 0.85rem; font-weight: 700; color: var(--ink);">End Date</label>
-            <input type="date" id="end-date-input" style="padding: 10px 14px; border: 2px solid var(--ink); border-radius: var(--radius-md); font-family: 'Inter', sans-serif; outline: none; background: #fffdf3;">
+          <div class="history-field">
+            <label for="end-date-input" class="history-label">End Date</label>
+            <input type="date" id="end-date-input" class="history-input">
           </div>
 
-          <div style="display: flex; gap: 12px; margin-top: auto;">
-            <button id="filter-history-btn" style="background: var(--teal); color: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 12px 20px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.12s ease;">
-              🔍 Filter Logs
+          <div class="history-actions">
+            <button id="filter-history-btn" class="history-btn history-btn--filter" type="button" aria-label="Filter telemetry logs">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Filter Logs
             </button>
-            <button id="export-csv-btn" style="background: var(--leaf); color: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 12px 20px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.12s ease;">
-              📥 Export CSV
+            <button id="export-csv-btn" class="history-btn history-btn--export" type="button" aria-label="Export telemetry to CSV">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
             </button>
           </div>
 
         </div>
 
-        <p id="export-status" style="margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--crimson);"></p>
+        <p id="export-status" class="history-status" role="status" aria-live="polite"></p>
 
         <!-- Data Table -->
-        <div class="table-scroll" style="border: 2px solid var(--ink); border-radius: var(--radius-md);">
+        <div class="table-scroll history-table-wrap">
           <table id="telemetry-table">
             <thead>
               <tr>
@@ -431,12 +434,12 @@
                 <th>Moisture (%)</th>
                 <th>pH</th>
                 <th>Temp (°C)</th>
-                <th>NPK (N/P/K)</th>
+                <th>NPK (N/P/K mg/kg)</th>
               </tr>
             </thead>
             <tbody id="telemetry-table-body">
               <tr>
-                <td colspan="6" style="text-align: center; padding: 24px; font-style: italic; color: var(--ink-soft);">Select a date range and click Filter Logs.</td>
+                <td colspan="6" class="table-empty-state">Select a date range and click Filter Logs.</td>
               </tr>
             </tbody>
           </table>
@@ -476,8 +479,9 @@
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
 
-    statusEl.innerText = 'Fetching telemetry logs...';
-    tableBody.innerHTML = '<tr><td colspan="6" style="padding: 10px; text-align: center;">Loading...</td></tr>';
+    statusEl.className = 'history-status is-loading';
+    statusEl.textContent = 'Fetching telemetry logs...';
+    tableBody.innerHTML = '<tr><td colspan="6" class="table-empty-state">Loading telemetry logs...</td></tr>';
 
     try {
       const res = await fetch(`${RENDER_BASE_URL}/api/telemetry/history?start_date=${startDate}&end_date=${endDate}`);
@@ -485,34 +489,39 @@
 
       if (result.success && result.data.length > 0) {
         fetchedTelemetryData = result.data;
-        statusEl.innerText = ` Found ${result.count} telemetry records.`;
+        statusEl.className = 'history-status is-success';
+        statusEl.textContent = `Found ${result.count} telemetry records for the selected period.`;
 
         // Render table rows
         tableBody.innerHTML = result.data.map(item => `
-          <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px;">${item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A'}</td>
-            <td style="padding: 8px;">${item.node_id}</td>
-            <td style="padding: 8px;">${item.moisture ?? '--'}%</td>
-            <td style="padding: 8px;">${item.pH ?? '--'}</td>
-            <td style="padding: 8px;">${item.temperature ?? '--'}°C</td>
-            <td style="padding: 8px;">${item.nitrogen ?? 0}/${item.phosphorus ?? 0}/${item.potassium ?? 0}</td>
+          <tr class="history-table-row">
+            <td class="mono">${item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A'}</td>
+            <td><strong>${item.node_id}</strong></td>
+            <td class="mono">${item.moisture ?? '--'}%</td>
+            <td class="mono">${item.pH ?? '--'}</td>
+            <td class="mono">${item.temperature ?? '--'}°C</td>
+            <td class="mono">${item.nitrogen ?? 0} / ${item.phosphorus ?? 0} / ${item.potassium ?? 0}</td>
           </tr>
         `).join('');
       } else {
         fetchedTelemetryData = [];
-        statusEl.innerText = '⚠️ No telemetry records found for selected date range.';
-        tableBody.innerHTML = '<tr><td colspan="6" style="padding: 10px; text-align: center;">No records found.</td></tr>';
+        statusEl.className = 'history-status is-warning';
+        statusEl.textContent = 'No telemetry records found for the selected date range.';
+        tableBody.innerHTML = '<tr><td colspan="6" class="table-empty-state">No records found. Try expanding your date range.</td></tr>';
       }
     } catch (err) {
       console.error('Error fetching telemetry history:', err);
-      statusEl.innerText = '❌ Error fetching telemetry logs. Check console.';
+      statusEl.className = 'history-status is-error';
+      statusEl.textContent = 'Unable to fetch telemetry logs. Please verify bridge server connectivity.';
+      tableBody.innerHTML = '<tr><td colspan="6" class="table-empty-state">Failed to load data. Please retry.</td></tr>';
     }
   }
 
   // 2. Export Filtered Records to CSV Spreadsheet
   function exportTelemetryToCSV() {
     if (!fetchedTelemetryData || fetchedTelemetryData.length === 0) {
-      alert('No telemetry data available to export. Please filter logs first!');
+      statusEl.className = 'history-status is-warning';
+      statusEl.textContent = 'No telemetry data available to export. Please filter logs first.';
       return;
     }
 
@@ -544,7 +553,8 @@
     link.click();
     document.body.removeChild(link);
 
-    statusEl.innerText = '✅ Telemetry CSV spreadsheet downloaded successfully!';
+    statusEl.className = 'history-status is-success';
+    statusEl.textContent = 'Telemetry CSV spreadsheet downloaded successfully.';
   }
 
   // Event Listeners

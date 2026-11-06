@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T22:45:00.000Z",
+  "title": "Design System: NanoAgriSense",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Leaf Canopy",
+        "canonical": "#4c7a3a",
+        "tonalRamp": ["#162510", "#213819", "#2f4f22", "#3e6430", "#4c7a3a", "#7aa568", "#b7d19c", "#e4ecd8"]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "Deep Foliage",
+        "canonical": "#2f4f22",
+        "tonalRamp": ["#111e0c", "#1d3215", "#2f4f22", "#416c30", "#54883f", "#7ca76b", "#b2cca4", "#e1ebdc"]
+      },
+      "primary-light": {
+        "role": "primary",
+        "displayName": "Sprout Mist",
+        "canonical": "#e4ecd8",
+        "tonalRamp": ["#364426", "#50643b", "#6e8854", "#8fab71", "#b2cca4", "#cde0be", "#e4ecd8", "#f4f8ee"]
+      },
+      "primary-mist": {
+        "role": "primary",
+        "displayName": "Sage Field",
+        "canonical": "#b7d19c",
+        "tonalRamp": ["#253516", "#3c5425", "#567637", "#739b4b", "#94be66", "#b7d19c", "#d5e5c3", "#f1f6ec"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Irrigation Cyan",
+        "canonical": "#1f7fa0",
+        "tonalRamp": ["#08242e", "#0e3a4a", "#15576f", "#1f7fa0", "#31a0c7", "#60bad9", "#9ed5e7", "#d9edf4"]
+      },
+      "secondary-track": {
+        "role": "secondary",
+        "displayName": "Water Track",
+        "canonical": "#d9edf4",
+        "tonalRamp": ["#153d49", "#235a6b", "#367b90", "#529fb6", "#78c0d5", "#a9dbe8", "#d9edf4", "#f2f9fb"]
+      },
+      "tertiary-ochre": {
+        "role": "tertiary",
+        "displayName": "Harvest Ochre",
+        "canonical": "#a97a2b",
+        "tonalRamp": ["#2d1e07", "#4a320c", "#704d15", "#a97a2b", "#cb9845", "#deaf64", "#eed098", "#f1e6cc"]
+      },
+      "tertiary-ochre-track": {
+        "role": "tertiary",
+        "displayName": "Ochre Track",
+        "canonical": "#f1e6cc",
+        "tonalRamp": ["#423218", "#614c27", "#876c3c", "#b09059", "#d0b380", "#e4d0aa", "#f1e6cc", "#faf6ee"]
+      },
+      "alert-rust": {
+        "role": "tertiary",
+        "displayName": "Terracotta Rust",
+        "canonical": "#a8472e",
+        "tonalRamp": ["#2e1008", "#4c1a0e", "#772b18", "#a8472e", "#c9664c", "#dd8973", "#edaface", "#f1ded2"]
+      },
+      "alert-rust-track": {
+        "role": "tertiary",
+        "displayName": "Terracotta Track",
+        "canonical": "#f1ded2",
+        "tonalRamp": ["#472217", "#673527", "#8e4e3d", "#b56e5c", "#d39787", "#e7beaf", "#f1ded2", "#fbf3ee"]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Sunlit Parchment",
+        "canonical": "#f6f2da",
+        "tonalRamp": ["#36321c", "#524d2d", "#756e44", "#9e9561", "#c4bb85", "#ded7ad", "#f6f2da", "#fbf9ee"]
+      },
+      "neutral-bg-deep": {
+        "role": "neutral",
+        "displayName": "Deep Cream",
+        "canonical": "#efe9c9",
+        "tonalRamp": ["#332f17", "#4e4726", "#70673a", "#968b53", "#bcaf75", "#d7cb99", "#efe9c9", "#faf7ea"]
+      },
+      "neutral-surface": {
+        "role": "neutral",
+        "displayName": "Field Paper",
+        "canonical": "#fffdf3",
+        "tonalRamp": ["#363428", "#53503f", "#75725d", "#9c9881", "#c4c0a7", "#e3dfcc", "#f5f3e7", "#fffdf3"]
+      },
+      "neutral-surface-pure": {
+        "role": "neutral",
+        "displayName": "Pure White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#262626", "#454545", "#6b6b6b", "#969696", "#c2c2c2", "#e3e3e3", "#f2f2f2", "#ffffff"]
+      },
+      "neutral-ink": {
+        "role": "neutral",
+        "displayName": "Charcoal Ink",
+        "canonical": "#2c2a1e",
+        "tonalRamp": ["#11100b", "#1e1d15", "#2c2a1e", "#444130", "#635f47", "#878265", "#b3ae90", "#e2ded0"]
+      },
+      "neutral-ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#5c5a48",
+        "tonalRamp": ["#1d1c16", "#2f2d24", "#444235", "#5c5a48", "#7a7762", "#9c9983", "#c1bfae", "#e8e7df"]
+      },
+      "neutral-border": {
+        "role": "neutral",
+        "displayName": "Straw Border",
+        "canonical": "#d8d0a4",
+        "tonalRamp": ["#2c2817", "#443f26", "#635c3a", "#877f52", "#ada26f", "#c8be8e", "#d8d0a4", "#f4f1de"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero greetings and main operator headlines" },
+      "headline": { "displayName": "Headline", "purpose": "Container heads, feed tables, visual panels" },
+      "title": { "displayName": "Title", "purpose": "Node labels, section bars, cluster indicators" },
+      "body": { "displayName": "Body", "purpose": "Sensor readings, descriptions, instructional text" },
+      "label": { "displayName": "Label", "purpose": "Tier headers, status pills, table headers, scientific units" }
+    },
+    "shadows": [
+      {
+        "name": "panel-drop",
+        "value": "6px 7px 0 rgba(44,42,30,0.9)",
+        "purpose": "Tactile solid offset for floating notification drawers and prominent greeting blocks."
+      },
+      {
+        "name": "button-offset",
+        "value": "3px 4px 0 rgba(44,42,30,0.35)",
+        "purpose": "Tactile click offset on carousel navigation buttons and interactive circular controls."
+      },
+      {
+        "name": "toggle-thumb",
+        "value": "0 2px 5px rgba(0,0,0,0.18)",
+        "purpose": "Ambient drop shadow under sliding segmented toggle indicators."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for sliding filters, dropdown drawers, and width changes."
+      },
+      {
+        "name": "transition-instant",
+        "value": "0.15s ease",
+        "purpose": "Fast hover and active tactile response on buttons and clickable cells."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "480px" },
+      { "name": "tablet", "value": "760px" },
+      { "name": "desktop", "value": "900px" },
+      { "name": "wide", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard action and automatic mode actuation toggle.",
+      "html": "<button class=\"ds-btn-primary\">ENABLE AUTOMATIC</button>",
+      "css": ".ds-btn-primary { background: #4c7a3a; color: #ffffff; border: 2px solid #2c2a1e; border-radius: 10px; padding: 11px 20px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s ease, transform 0.12s ease; } .ds-btn-primary:hover { background: #2f4f22; } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Emergency Close Button",
+      "kind": "button",
+      "refersTo": "button-valve-close",
+      "description": "Critical manual valve cutoff and fault override button.",
+      "html": "<button class=\"ds-btn-close\">CLOSE VALVE</button>",
+      "css": ".ds-btn-close { background: #a8472e; color: #ffffff; border: 2px solid #2c2a1e; border-radius: 10px; padding: 11px 20px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.15s ease, transform 0.12s ease; } .ds-btn-close:hover { background: #8e3620; } .ds-btn-close:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Status Pill (Optimal)",
+      "kind": "chip",
+      "refersTo": "status-pill-ok",
+      "description": "Status badge denoting verified normal sensor parameters.",
+      "html": "<span class=\"ds-status-pill ds-status-ok\"><span class=\"ds-status-dot\"></span>Normal</span>",
+      "css": ".ds-status-pill { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; } .ds-status-ok { background: #d9edf4; color: #1f7fa0; } .ds-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #1f7fa0; }"
+    },
+    {
+      "name": "Status Pill (Critical Action)",
+      "kind": "chip",
+      "refersTo": "status-pill-alert",
+      "description": "Urgent alert pill indicating out-of-spec soil or hardware error.",
+      "html": "<span class=\"ds-status-pill ds-status-alert\"><span class=\"ds-status-dot-alert\"></span>Action</span>",
+      "css": ".ds-status-pill { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; } .ds-status-alert { background: #f1ded2; color: #a8472e; } .ds-status-dot-alert { width: 6px; height: 6px; border-radius: 50%; background: #a8472e; }"
+    },
+    {
+      "name": "KPI Soil Metric Card",
+      "kind": "card",
+      "refersTo": "card-kpi",
+      "description": "Individual parameter tile for moisture, pH, temperature, or NPK.",
+      "html": "<div class=\"ds-kpi-card\"><p class=\"ds-kpi-label\">Soil Moisture</p><h3 class=\"ds-kpi-val\">42.5<span class=\"ds-kpi-unit\">% VWC</span></h3><p class=\"ds-kpi-note\">Optimal root zone</p></div>",
+      "css": ".ds-kpi-card { background: #fffdf3; border: 2px solid #2c2a1e; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; font-family: 'Inter', sans-serif; } .ds-kpi-label { margin: 0; font-size: 0.95rem; font-weight: 600; color: #5c5a48; } .ds-kpi-val { margin: 0; font-size: 1.6rem; font-weight: 700; color: #2c2a1e; line-height: 1; } .ds-kpi-unit { font-size: 0.82rem; font-weight: 600; color: #5c5a48; margin-left: 4px; } .ds-kpi-note { margin: 0; font-size: 0.78rem; color: #5c5a48; }"
+    },
+    {
+      "name": "Navigation Pill",
+      "kind": "nav",
+      "refersTo": "nav-pill",
+      "description": "Pill-shaped global navigation item with hover and active states.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" class=\"ds-nav-link ds-nav-active\">Home</a><a href=\"#\" class=\"ds-nav-link\">Irrigation</a></nav>",
+      "css": ".ds-nav { display: inline-flex; gap: 4px; background: #f6f2da; border: 2px solid #2c2a1e; border-radius: 999px; padding: 6px 8px; font-family: 'Inter', sans-serif; } .ds-nav-link { text-decoration: none; color: #2c2a1e; font-weight: 600; font-size: 0.95rem; padding: 8px 16px; border-radius: 999px; transition: background 0.15s ease; } .ds-nav-link:hover { background: #e4ecd8; } .ds-nav-active { background: #4c7a3a; color: #ffffff !important; }"
+    },
+    {
+      "name": "Circular Tool Button",
+      "kind": "button",
+      "refersTo": "button-tool",
+      "description": "Circular border button for fullscreen toggles and navigation.",
+      "html": "<button class=\"ds-tool-btn\" aria-label=\"Toggle\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"><path d=\"M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4\"></path></svg></button>",
+      "css": ".ds-tool-btn { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #2c2a1e; background: #fffdf3; color: #2c2a1e; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s ease, transform 0.12s ease; } .ds-tool-btn:hover { background: #e4ecd8; } .ds-tool-btn:active { transform: translateY(1px); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Botanical Field Ledger",
+    "overview": "NanoAgriSense balances the tactile discipline of an agricultural researcher's notebook with the functional immediacy of an industrial control room. Grounded in organic parchment, botanical pigments, and deep charcoal ink outlines, the interface communicates high-density scientific telemetry without ever lapsing into sterile, generic software templates. Every surface feels deliberate, physical, and calibrated for operators working under field daylight as well as academic evaluators auditing machine learning decisions.\n\nThe design language pairs warm, earth-derived substrates with high-contrast structural borders and measured tonal fills. Rather than relying on arbitrary floating cards or synthetic blur effects, information is partitioned into clear, bordered panels, segmented tables, and distinct status tiers. Physical actuators, fuzzy logic outputs, and real-time telemetry streams take center stage with high scannability and unambiguous tactile controls.",
+    "keyCharacteristics": [
+      "Sunlit Earth Substrates: Warm parchment canvas (#f6f2da) with a subtle 22px botanical micro-dot grid.",
+      "Physical Ink Outlines: Crisp, confident 2px and 2.5px charcoal ink borders (#2c2a1e) that anchor every interactive surface.",
+      "Natural Botanical Accents: Leaf canopy greens, irrigation cyan, harvest ochre, and terracotta rust replacing synthetic UI neons.",
+      "Soft Layered Tonal Depth: Gentle tonal layering with quiet, selective offset shadows for elevated dialogs and focus states.",
+      "Mission-Critical Clarity: Three-tiered alert hierarchy and unmistakable binary feedback for pumps, solenoid valves, and power status."
+    ],
+    "rules": [
+      {
+        "name": "The Natural Pigment Rule",
+        "body": "Synthetic saturated neons (hot magenta, electric blue, radioactive green) are strictly prohibited. Every color in the system must represent an observable agricultural truth: canopy leaf, river water, fertile loam, sun-cured crop, or dry terracotta clay.",
+        "section": "colors"
+      },
+      {
+        "name": "The Alert Rarity Rule",
+        "body": "Terracotta Rust (#a8472e) is reserved strictly for actionable critical conditions requiring human intervention or automated cutoff. It is never used for decorative accents or neutral badges.",
+        "section": "colors"
+      },
+      {
+        "name": "The Explicit Units Rule",
+        "body": "Every telemetry reading must display its physical scientific unit (ppm CO₂, pH, % VWC, mg/kg NPK, °C, V, dBm) in secondary soft ink directly adjacent to the numerical value. Numbers are never presented bare.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Canvas Rule",
+        "body": "Internal dashboard containers and cards remain flat at rest with 2px ink borders. Hard drop shadows are reserved for floating menus, dialogs, and primary greeting blocks.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do maintain the 2px/2.5px solid charcoal ink border across all interactive cards and panels.",
+      "Do anchor every telemetry readout with explicit scientific measurement units (%, ppm, mg/kg, °C).",
+      "Do use alternating row fills (#e4ecd8) on dense data tables to preserve scanning accuracy in field conditions.",
+      "Do show active hardware states (valves, pumps, power) with dual confirmation: color badge AND explicit textual state.",
+      "Do preserve the warm parchment canvas (#f6f2da) and botanical dot matrix pattern as the bedrock of the visual environment."
+    ],
+    "donts": [
+      "Don't introduce generic cool-slate or corporate blue backgrounds (#f8fafc, #1e293b).",
+      "Don't use diffuse fuzzy CSS drop shadows (box-shadow: 0 10px 30px rgba(0,0,0,0.1)); keep depth tonal and outlines physical.",
+      "Don't use neon warning reds or high-saturation alert banners; rely on Terracotta Rust (#a8472e).",
+      "Don't hide critical Sugeno fuzzy inference or solenoid actuation reasons behind nested menus; keep autonomous actions transparent.",
+      "Don't omit touch-friendly padding: all mobile interactive elements must maintain at least 44×44px hit targets."
+    ]
+  }
+}
