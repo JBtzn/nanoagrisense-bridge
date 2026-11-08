@@ -535,9 +535,9 @@
         row.moisture ?? '',
         row.pH ?? '',
         row.temperature ?? '',
-        row.nitrogen ?? '',
-        row.phosphorus ?? '',
-        row.potassium ?? '',
+        row.npk?.n ?? '',
+        row.npk?.p ?? '',
+        row.npk?.k ?? '',
         row.co2 ?? ''
       ].join(','))
     ];
