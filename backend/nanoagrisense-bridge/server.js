@@ -265,9 +265,11 @@ app.get('/api/telemetry/history', async (req, res) => {
         moisture: data.moisture ?? null,
         pH: data.pH ?? null,
         temperature: data.temperature ?? null,
-        nitrogen: data.nitrogen ?? null,
-        phosphorus: data.phosphorus ?? null,
-        potassium: data.potassium ?? null,
+        npk: {
+          n: data.npk?.n ?? 0,
+          p: data.npk?.p ?? 0,
+          k: data.npk?.k ?? 0
+        },
         co2: data.co2 ?? null,
         timestamp: data.timestamp ? data.timestamp.toDate().toISOString() : null
       });
