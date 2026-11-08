@@ -500,7 +500,7 @@
             <td class="mono">${item.moisture ?? '--'}%</td>
             <td class="mono">${item.pH ?? '--'}</td>
             <td class="mono">${item.temperature ?? '--'}°C</td>
-            <td class="mono">${item.nitrogen ?? 0} / ${item.phosphorus ?? 0} / ${item.potassium ?? 0}</td>
+            <td class="mono">${item.npk?.n ?? 0} / ${item.npk?.p ?? 0} / ${item.npk?.k ?? 0}</td>
           </tr>
         `).join('');
       } else {
