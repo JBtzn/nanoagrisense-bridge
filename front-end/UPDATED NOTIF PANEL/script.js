@@ -834,7 +834,7 @@ async function fieldTick() {
   }
 
   renderChart(currentChart);
-  setTimeout(fieldTick, 10000); 
+  setTimeout(fieldTick, 60000); 
 }
 
 function handleIncomingForegroundNotification(payload) {
@@ -896,7 +896,7 @@ function setupPushNotifications() {
 function initDashboard() {
   fieldTick();
   fetchAlerts();
-  setInterval(fetchAlerts, 10000);
+  setInterval(fetchAlerts, 60000); // every 10 minutes
   setupPushNotifications();
 }
 
